@@ -18,8 +18,11 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const isHealthy = systemHealth?.status === 'healthy';
-  const nebiusConfigured = systemHealth?.nebius_integration?.configured;
-  const modelId = systemHealth?.nebius_integration?.model_id || 'nvidia/nemotron-3-super-120b-a12b';
+  const nebiusIntegration = systemHealth?.nebius_integration;
+  const nebiusStatus = nebiusIntegration?.status || (nebiusIntegration?.configured ? 'connected' : 'unconfigured');
+  const nebiusLatency = nebiusIntegration?.latency_ms;
+  const nebiusMessage = nebiusIntegration?.message || '';
+  const modelId = nebiusIntegration?.model_id || 'nvidia/nemotron-3-super-120b-a12b';
 
   // Support Escape to cancel confirmation dialog
   useEffect(() => {
@@ -137,13 +140,29 @@ export const Header: React.FC<HeaderProps> = ({
             <span style={{ color: 'var(--text-secondary)' }} title={modelId}>
               Nemotron-3-Super
             </span>
-            {nebiusConfigured ? (
-              <span className="badge badge-trusted" style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem' }}>
-                Live Key
+            {nebiusStatus === 'connected' ? (
+              <span
+                className="badge badge-trusted"
+                style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem' }}
+                title={`Live Nemotron inference active via Nebius Token Factory (${nebiusLatency ? `${nebiusLatency}ms` : 'connected'})`}
+              >
+                ● Live Inference
+              </span>
+            ) : nebiusStatus === 'authentication_failed' || nebiusStatus === 'unavailable' ? (
+              <span
+                className="badge badge-revoked"
+                style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem' }}
+                title={`Inference unavailable: ${nebiusMessage}`}
+              >
+                ✕ Inference Unavailable
               </span>
             ) : (
-              <span className="badge badge-quarantined" style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem' }} title="Running with local deterministic fallback; configure NEBIUS_API_KEY for live Nemotron inference">
-                Simulated Key
+              <span
+                className="badge badge-quarantined"
+                style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem' }}
+                title="Simulated execution: Deterministic fallback active. Configure NEBIUS_API_KEY in backend/.env for live Nemotron inference."
+              >
+                ▲ Simulated Execution
               </span>
             )}
           </div>

@@ -153,10 +153,12 @@ class TrustEngine:
 
         # 1. Call Nemotron for structured candidate memory extraction
         extraction: Optional[ExtractedMemoryResult] = None
+        inference_mode = "live_nemotron"
         try:
             extraction = nebius_client.extract_memory_candidate(content, source)
         except Exception as e:
             # When Nebius is unconfigured or in tests without mock, gracefully structure fallback
+            inference_mode = "simulated_fallback"
             is_untrusted = any(m in source.lower() for m in cls.UNTRUSTED_SOURCE_MARKERS)
             extraction = ExtractedMemoryResult(
                 proposed_memory=content.strip().split("\n")[0][:150],
@@ -186,6 +188,7 @@ class TrustEngine:
                 "quarantine_reasons": reasons,
                 "extraction_risk": extraction.risk_score,
                 "suspicious_markers": extraction.suspicious_markers,
+                "inference_mode": inference_mode,
             },
         )
         save_evidence(evidence)
@@ -215,6 +218,7 @@ class TrustEngine:
                 "suspicious_markers": extraction.suspicious_markers,
                 "risk_score": extraction.risk_score,
                 "trust_reasons": reasons,
+                "inference_mode": inference_mode,
             },
         )
         save_memory(memory)
@@ -288,6 +292,7 @@ class TrustEngine:
         amount = SEEDED_PAYMENT_AMOUNT
         rationale = f"Evaluated against {len(eligible_mem)} eligible memories and {len(eligible_ev)} eligible evidence records."
         confidence = 1.0
+        decision_inference_mode = "live_nemotron"
 
         try:
             model_dec = nebius_client.generate_decision(
@@ -302,6 +307,7 @@ class TrustEngine:
             rationale = model_dec.rationale
             confidence = model_dec.confidence
         except Exception:
+            decision_inference_mode = "simulated_fallback"
             # If live model is unconfigured or unavailable, use deterministic rule based on eligible context
             # In unfiltered mode, if there is a quarantined memory mentioning KY11, naive baseline adopts it
             if unfiltered_mode:
@@ -330,6 +336,7 @@ class TrustEngine:
             metadata={
                 "unfiltered_mode": unfiltered_mode,
                 "excluded_ids": list(excluded),
+                "inference_mode": decision_inference_mode,
             },
         )
         save_decision(decision)

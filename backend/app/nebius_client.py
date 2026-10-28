@@ -72,16 +72,17 @@ class NebiusClient:
         if not self.api_key or not self.api_key.strip():
             return {
                 "status": "unconfigured",
-                "message": "NEBIUS_API_KEY is not set",
+                "message": "NEBIUS_API_KEY is not configured",
                 "model_id": self.model_id,
                 "base_url": self.base_url,
                 "configured": False,
+                "available": False,
             }
 
         client = self._get_client()
         start = time.perf_counter()
         try:
-            # Minimal probe
+            # Minimal probe to verify live Token Factory authentication and model availability
             response = client.chat.completions.create(
                 model=self.model_id,
                 messages=[{"role": "user", "content": "Respond with single word: OK"}],
@@ -97,25 +98,41 @@ class NebiusClient:
                 "base_url": self.base_url,
                 "latency_ms": elapsed_ms,
                 "configured": True,
+                "available": True,
             }
         except AuthenticationError as e:
-            raise NebiusInferenceError(
-                f"Nebius API authentication failed: {str(e)}",
-                status_code=401,
-                details={"error_type": "AuthenticationError"},
-            )
+            logger.warning("Nebius API authentication failed: %s", e)
+            return {
+                "status": "authentication_failed",
+                "message": f"Nebius authentication failed: {str(e)}",
+                "model_id": self.model_id,
+                "base_url": self.base_url,
+                "configured": True,
+                "available": False,
+                "error_type": "AuthenticationError",
+            }
         except APIError as e:
-            raise NebiusInferenceError(
-                f"Nebius API call returned an error: {str(e)}",
-                status_code=502,
-                details={"error_type": type(e).__name__},
-            )
+            logger.warning("Nebius API returned an error: %s", e)
+            return {
+                "status": "unavailable",
+                "message": f"Nebius API error ({type(e).__name__}): {str(e)}",
+                "model_id": self.model_id,
+                "base_url": self.base_url,
+                "configured": True,
+                "available": False,
+                "error_type": type(e).__name__,
+            }
         except Exception as e:
-            raise NebiusInferenceError(
-                f"Unexpected failure contacting Nebius API: {str(e)}",
-                status_code=502,
-                details={"error_type": type(e).__name__},
-            )
+            logger.warning("Unexpected failure contacting Nebius API: %s", e)
+            return {
+                "status": "unavailable",
+                "message": f"Connection error contacting Nebius API: {str(e)}",
+                "model_id": self.model_id,
+                "base_url": self.base_url,
+                "configured": True,
+                "available": False,
+                "error_type": type(e).__name__,
+            }
 
     def extract_memory_candidate(self, content: str, source: str) -> ExtractedMemoryResult:
         """Call Nemotron to extract a candidate structured memory and assess suspicious markers.
