@@ -303,7 +303,7 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-5">
             <a
-              href="https://github.com/JacobTheGreat1337/GhostTrace-AI"
+              href="https://github.com/jacobjerryarackal/GhostTrace/"
               target="_blank"
               rel="noreferrer"
               className="hover:underline text-[var(--ink)]"
@@ -311,7 +311,7 @@ export default function LandingPage() {
               GitHub repository
             </a>
             <a
-              href="https://github.com/JacobTheGreat1337/GhostTrace-AI/blob/main/LICENSE"
+              href="https://github.com/jacobjerryarackal/GhostTrace/main/LICENSE"
               target="_blank"
               rel="noreferrer"
               className="hover:underline text-[var(--ink)]"
@@ -319,7 +319,7 @@ export default function LandingPage() {
               MIT license
             </a>
             <a
-              href="https://github.com/JacobTheGreat1337/GhostTrace-AI/blob/main/README.md"
+              href="https://github.com/jacobjerryarackal/GhostTrace/main/README.md"
               target="_blank"
               rel="noreferrer"
               className="hover:underline text-[var(--ink)]"
