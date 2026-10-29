@@ -36,7 +36,14 @@ class Settings(BaseSettings):
 
     @property
     def has_nebius_key(self) -> bool:
-        return bool(self.nebius_api_key and len(self.nebius_api_key.strip()) > 5)
+        raw = (self.nebius_api_key or "").strip()
+        dummy_placeholders = {
+            "",
+            "your_actual_api_key",
+            "your_nebius_api_key_here",
+            "your_api_key_here",
+        }
+        return bool(raw and len(raw) > 10 and raw.lower() not in dummy_placeholders)
 
 
 settings = Settings()

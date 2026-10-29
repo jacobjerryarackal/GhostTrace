@@ -299,9 +299,9 @@ def reset_demo() -> Dict[str, Any]:
 
 # 10. Benchmark evaluation
 @app.get("/api/benchmark", tags=["Evaluation"])
-def get_benchmark_results() -> Dict[str, Any]:
+def get_benchmark_results(use_live: bool = Query(False, description="Run live inference for a subset of scenarios if credentials are configured")) -> Dict[str, Any]:
     """Run and return the 12-scenario reproducible benchmark comparing Simple Memory Baseline vs. GhostTrace."""
-    return benchmark_evaluator.run_benchmark()
+    return benchmark_evaluator.run_benchmark(use_live=use_live)
 
 
 # 11. Decisions list

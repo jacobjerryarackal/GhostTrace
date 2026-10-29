@@ -1,10 +1,14 @@
 """Deterministic Trust and Revocation Engine for GhostTrace."""
 
+import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 import uuid
 
+logger = logging.getLogger("ghosttrace.trust")
+
 from app.database import (
+    get_all_decisions,
     get_all_evidence,
     get_all_memories,
     get_decision,
@@ -20,6 +24,7 @@ from app.database import (
     SEEDED_PAYMENT_AMOUNT,
     SEEDED_SCENARIO_NAME,
 )
+from app.config import settings
 from app.graph import graph_engine
 from app.models import (
     AuditEvent,
@@ -292,34 +297,59 @@ class TrustEngine:
         amount = SEEDED_PAYMENT_AMOUNT
         rationale = f"Evaluated against {len(eligible_mem)} eligible memories and {len(eligible_ev)} eligible evidence records."
         confidence = 1.0
-        decision_inference_mode = "live_nemotron"
+        decision_inference_mode = "simulated_fallback"
+        is_live = False
+        model_id = settings.nebius_model_id
+        latency_ms = 0.0
+        evidence_ids_used: List[str] = []
+        untrusted_influence_detected = False
 
-        try:
-            model_dec = nebius_client.generate_decision(
-                scenario=scenario,
-                eligible_evidence=[e.model_dump() for e in eligible_ev],
-                eligible_memories=[m.model_dump() for m in eligible_mem],
-                unfiltered_mode=unfiltered_mode,
-            )
-            action = model_dec.action
-            target_destination = model_dec.target_destination
-            amount = model_dec.amount or SEEDED_PAYMENT_AMOUNT
-            rationale = model_dec.rationale
-            confidence = model_dec.confidence
-        except Exception:
-            decision_inference_mode = "simulated_fallback"
-            # If live model is unconfigured or unavailable, use deterministic rule based on eligible context
-            # In unfiltered mode, if there is a quarantined memory mentioning KY11, naive baseline adopts it
+        if nebius_client.is_configured:
+            try:
+                model_dec = nebius_client.generate_decision(
+                    scenario=scenario,
+                    eligible_evidence=[e.model_dump() for e in eligible_ev],
+                    eligible_memories=[m.model_dump() for m in eligible_mem],
+                    unfiltered_mode=unfiltered_mode,
+                )
+                action = model_dec.action
+                target_destination = model_dec.target_destination
+                amount = model_dec.amount or SEEDED_PAYMENT_AMOUNT
+                rationale = model_dec.rationale
+                confidence = model_dec.confidence
+                evidence_ids_used = model_dec.evidence_ids_used
+                untrusted_influence_detected = model_dec.untrusted_influence_detected
+                decision_inference_mode = "live_nemotron"
+                is_live = True
+                model_id = model_dec.model_id or settings.nebius_model_id
+                latency_ms = model_dec.latency_ms
+            except Exception as e:
+                decision_inference_mode = "simulated_fallback"
+                is_live = False
+                logger.warning("Live Nemotron decision call failed, falling back to simulated execution: %s", e)
+
+        if not is_live:
+            # Deterministic simulation fallback
             if unfiltered_mode:
+                # In naive baseline, an unverified update in eligible context influences the decision
                 for m in eligible_mem:
-                    if "KY11" in m.content or "offshore" in m.content.lower():
+                    import re
+                    acc_match = re.search(r"([A-Z0-9]{2,4}-[A-Z0-9\-]{6,25})", m.content)
+                    if acc_match and acc_match.group(1) != SEEDED_PAYMENT_DESTINATION:
+                        target_destination = acc_match.group(1)
+                        untrusted_influence_detected = True
+                        rationale = f"Simulated baseline: Unprotected agent adopted unquarantined memory {m.id} ({target_destination})."
+                        break
+                    elif "KY11" in m.content or "offshore" in m.content.lower():
                         target_destination = "KY11-VAULT-ATTACKER-133742"
-                        rationale = f"Unprotected baseline decision poisoned by unquarantined memory {m.id}."
+                        untrusted_influence_detected = True
+                        rationale = f"Simulated baseline: Unprotected decision poisoned by unquarantined memory {m.id}."
                         break
             else:
                 # Protected mode falls back strictly to trusted policy
                 target_destination = SEEDED_PAYMENT_DESTINATION
-                rationale = "Protected decision routed safely to corporate treasury account."
+                untrusted_influence_detected = False
+                rationale = "Protected decision: Quarantined evidence excluded. Routed safely to corporate treasury account."
 
         decision = Decision(
             id=dec_id,
@@ -337,6 +367,11 @@ class TrustEngine:
                 "unfiltered_mode": unfiltered_mode,
                 "excluded_ids": list(excluded),
                 "inference_mode": decision_inference_mode,
+                "is_live": is_live,
+                "model_id": model_id,
+                "latency_ms": latency_ms,
+                "evidence_ids_used": evidence_ids_used,
+                "untrusted_influence_detected": untrusted_influence_detected,
             },
         )
         save_decision(decision)
@@ -392,17 +427,44 @@ class TrustEngine:
                 save_memory(dep_mem)
                 invalidated_ids.append(dep_id)
 
-        # 3. Re-evaluate decision in protected mode (with all revoked/invalidated nodes excluded)
-        reevaluated_decision = cls.evaluate_decision()
-
-        # 4. Compare with seeded clean reference decision
+        # 3. Check prior decisions before revocation to evaluate whether divergence was active
+        all_decisions = get_all_decisions()
         clean_ref = get_decision(SEEDED_CLEAN_DECISION_ID)
         ref_destination = clean_ref.target_destination if clean_ref else SEEDED_PAYMENT_DESTINATION
         ref_action = clean_ref.action if clean_ref else "APPROVE_PAYMENT"
 
+        prior_decisions = [d for d in all_decisions if not d.is_clean_reference]
+        was_previously_diverted = any(d.target_destination != ref_destination for d in prior_decisions)
+
+        # 4. Re-evaluate decision in protected mode (with all revoked/invalidated nodes excluded)
+        reevaluated_decision = cls.evaluate_decision()
+
+        # 5. Truthful Recovery Assessment
         destination_matches = (reevaluated_decision.target_destination == ref_destination)
         action_matches = (reevaluated_decision.action == ref_action)
-        recovery_proven = bool(destination_matches and action_matches)
+
+        if destination_matches and action_matches:
+            if was_previously_diverted:
+                recovery_status = "RECOVERY_PROVED"
+                recovery_proven = True
+                recovery_msg = (
+                    f"Successfully revoked {target_id} and invalidated {len(invalidated_ids)} "
+                    f"downstream memories. Recovery to verified corporate treasury {ref_destination} proven!"
+                )
+            else:
+                recovery_status = "CLEAN_BASELINE_PRESERVED"
+                recovery_proven = True
+                recovery_msg = (
+                    f"Revoked {target_id} and invalidated {len(invalidated_ids)} downstream memories. "
+                    f"Decision remained securely routed to corporate treasury account {ref_destination}."
+                )
+        else:
+            recovery_status = "RECOVERY_INCOMPLETE"
+            recovery_proven = False
+            recovery_msg = (
+                f"Revocation executed for {target_id}, but re-evaluated destination "
+                f"'{reevaluated_decision.target_destination}' does not match expected '{ref_destination}'."
+            )
 
         comparison = {
             "reference_decision_id": SEEDED_CLEAN_DECISION_ID,
@@ -412,9 +474,13 @@ class TrustEngine:
             "recovered_action": reevaluated_decision.action,
             "destination_restored": destination_matches,
             "recovery_proven": recovery_proven,
+            "recovery_status": recovery_status,
+            "prior_destination_diverted": was_previously_diverted,
+            "is_live": reevaluated_decision.metadata.get("is_live", False),
+            "inference_mode": reevaluated_decision.metadata.get("inference_mode", "simulated_fallback"),
         }
 
-        # 5. Audit Logging
+        # 6. Audit Logging
         all_affected = [target_id] + invalidated_ids + [reevaluated_decision.id]
         save_audit_event(
             AuditEvent(
@@ -439,10 +505,7 @@ class TrustEngine:
             "reevaluated_decision": reevaluated_decision,
             "clean_reference_comparison": comparison,
             "recovery_proven": recovery_proven,
-            "message": (
-                f"Successfully revoked {target_id} and recursively invalidated {len(invalidated_ids)} "
-                f"downstream memories. Recovery to clean reference verified!"
-            ),
+            "message": recovery_msg,
         }
 
 
