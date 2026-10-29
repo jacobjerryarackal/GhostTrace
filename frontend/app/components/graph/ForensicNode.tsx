@@ -1,13 +1,14 @@
 'use client';
 
 import React from 'react';
-import { Handle, Position, NodeProps } from '@xyflow/react';
+import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { FileText, Brain, Scale, Lock, Check, ShieldAlert } from 'lucide-react';
 import { GraphNodeData } from '@/lib/types';
 
-export function ForensicNode({ data, selected }: NodeProps<{ data: GraphNodeData }>) {
-  const node = (data as any)?.data || data;
-  const { id, type, status, content, isConfirmedCausal } = node;
+export type ForensicNodeType = Node<GraphNodeData, 'forensicNode'>;
+
+export function ForensicNode({ data, selected }: NodeProps<ForensicNodeType>) {
+  const { id, type, status, content, isConfirmedCausal } = data;
 
   const isEvidence = type === 'evidence';
   const isMemory = type === 'memory';
