@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { fetchHealth } from '@/lib/api';
 
 interface NebiusStatus {
   status?: 'connected' | 'unconfigured' | 'authentication_failed' | 'unavailable';
@@ -17,24 +18,31 @@ export function StatusChip() {
 
   useEffect(() => {
     let mounted = true;
-    const fetchHealth = async () => {
+    const checkStatus = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8000/health');
-        if (res.ok) {
-          const data = await res.json();
-          if (mounted && data.nebius_integration) {
-            setNebius(data.nebius_integration);
-            if (data.nebius_integration.status === 'connected') {
-              setHasLiveCallSucceeded(true);
-            }
+        const data = await fetchHealth();
+        if (mounted && data?.nebius_integration) {
+          setNebius(data.nebius_integration);
+          if (data.nebius_integration.status === 'connected') {
+            setHasLiveCallSucceeded(true);
+          } else {
+            setHasLiveCallSucceeded(false);
           }
         }
-      } catch {
-        // Backend offline or unreachable
+      } catch (err: any) {
+        if (mounted) {
+          setNebius({
+            status: 'unavailable',
+            message: err?.message || 'Backend service unreachable',
+            configured: false,
+            available: false,
+          });
+          setHasLiveCallSucceeded(false);
+        }
       }
     };
-    fetchHealth();
-    const interval = setInterval(fetchHealth, 10000);
+    checkStatus();
+    const interval = setInterval(checkStatus, 10000);
     return () => {
       mounted = false;
       clearInterval(interval);

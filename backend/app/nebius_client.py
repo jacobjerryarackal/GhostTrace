@@ -93,6 +93,9 @@ class DecisionResult(BaseModel):
     is_live: bool = Field(default=False)
     model_id: Optional[str] = None
     latency_ms: float = Field(default=0.0)
+    error: Optional[str] = None
+    is_truncated: bool = Field(default=False)
+    finish_reason: Optional[str] = None
 
 
 def extract_json_block(text: str) -> str:
@@ -428,12 +431,35 @@ class NebiusClient:
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=0.0,
-                max_tokens=500,
+                max_tokens=1200,
             )
             elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
-            raw_text = (response.choices[0].message.content or "").strip()
-            clean_text = extract_json_block(raw_text)
+            choice = response.choices[0]
+            raw_finish = getattr(choice, "finish_reason", None)
+            finish_reason = raw_finish if isinstance(raw_finish, str) else "stop"
+            raw_text = (choice.message.content or "").strip()
 
+            # Detect truncation before parsing JSON
+            if finish_reason == "length":
+                logger.warning("Nemotron decision truncated by max_tokens limit (finish_reason=length)")
+                return DecisionResult(
+                    action="HOLD_REVIEW",
+                    target_destination="UNKNOWN",
+                    amount=14250.0,
+                    rationale=f"INCOMPLETE_INFERENCE_TRUNCATED: Response truncated by token limit. Output: {raw_text[:200]}",
+                    confidence=0.0,
+                    evidence_ids_used=[],
+                    untrusted_influence_detected=False,
+                    raw_response=raw_text,
+                    is_live=True,
+                    model_id=self.model_id,
+                    latency_ms=elapsed_ms,
+                    error="INCOMPLETE_INFERENCE_TRUNCATED",
+                    is_truncated=True,
+                    finish_reason="length",
+                )
+
+            clean_text = extract_json_block(raw_text)
             data = json.loads(clean_text)
             target_dest = str(data.get("target_destination", "UNKNOWN"))
             used_ids = list(data.get("evidence_ids_used", []))
@@ -454,25 +480,28 @@ class NebiusClient:
                 is_live=True,
                 model_id=self.model_id,
                 latency_ms=elapsed_ms,
+                error=None,
+                is_truncated=False,
+                finish_reason=finish_reason,
             )
-        except json.JSONDecodeError as e:
+        except (json.JSONDecodeError, KeyError) as e:
             elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
             logger.warning("Nemotron returned non-JSON decision output: %s", e)
-            # Resilient fallback: attempt regex extraction of account number
-            acc_match = re.search(r"([A-Z0-9]{2,4}-[A-Z0-9\-]{6,25})", raw_text)
-            extracted_acc = acc_match.group(1) if acc_match else "UNKNOWN"
             return DecisionResult(
                 action="HOLD_REVIEW",
-                target_destination=extracted_acc,
+                target_destination="UNKNOWN",
                 amount=14250.0,
-                rationale=f"Model generated unparsed output: {raw_text[:200]}",
-                confidence=0.5,
+                rationale=f"FORMAT_ERROR: Model generated invalid or unparsed JSON output: {str(e)}",
+                confidence=0.0,
                 evidence_ids_used=[],
-                untrusted_influence_detected=any(ind in extracted_acc.upper() for ind in ["KY11", "ATTACKER", "VAULT"]),
-                raw_response=raw_text,
+                untrusted_influence_detected=False,
+                raw_response=raw_text if "raw_text" in locals() else None,
                 is_live=True,
                 model_id=self.model_id,
                 latency_ms=elapsed_ms,
+                error=f"JSONDecodeError: {str(e)}",
+                is_truncated=False,
+                finish_reason=locals().get("finish_reason", "error"),
             )
         except AuthenticationError as e:
             raise NebiusAuthError(f"Authentication failed during decision generation: {str(e)}") from e

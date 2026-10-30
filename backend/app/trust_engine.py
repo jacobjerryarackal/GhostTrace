@@ -351,6 +351,13 @@ class TrustEngine:
                 untrusted_influence_detected = False
                 rationale = "Protected decision: Quarantined evidence excluded. Routed safely to corporate treasury account."
 
+        model_error = getattr(model_dec, "error", None) if is_live and "model_dec" in locals() else None
+        is_truncated = getattr(model_dec, "is_truncated", False) if is_live and "model_dec" in locals() else False
+        finish_reason = getattr(model_dec, "finish_reason", None) if is_live and "model_dec" in locals() else None
+
+        supplied_ev_ids = [e.id for e in eligible_ev]
+        supplied_mem_ids = [m.id for m in eligible_mem]
+
         decision = Decision(
             id=dec_id,
             scenario=scenario,
@@ -359,19 +366,24 @@ class TrustEngine:
             amount=amount,
             rationale=rationale,
             confidence=confidence,
-            evidence_ids=[e.id for e in eligible_ev],
-            memory_ids=[m.id for m in eligible_mem],
+            evidence_ids=supplied_ev_ids,
+            memory_ids=supplied_mem_ids,
             is_clean_reference=False,
             created_at=now,
             metadata={
                 "unfiltered_mode": unfiltered_mode,
                 "excluded_ids": list(excluded),
+                "supplied_evidence_ids": supplied_ev_ids,
+                "supplied_memory_ids": supplied_mem_ids,
+                "evidence_ids_used": evidence_ids_used,
+                "untrusted_influence_detected": untrusted_influence_detected,
                 "inference_mode": decision_inference_mode,
                 "is_live": is_live,
                 "model_id": model_id,
                 "latency_ms": latency_ms,
-                "evidence_ids_used": evidence_ids_used,
-                "untrusted_influence_detected": untrusted_influence_detected,
+                "error": model_error,
+                "is_truncated": is_truncated,
+                "finish_reason": finish_reason,
             },
         )
         save_decision(decision)

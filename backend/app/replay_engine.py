@@ -125,11 +125,17 @@ class ReplayEngine:
                 "suspect_inputs": suspect_ids,
                 "transitively_removed_count": len(removed_list),
                 "destination_divergence": destination_changed,
+                "action_divergence": action_changed,
+                "causal_influence_demonstrated": destination_changed or action_changed,
                 "recovery_criteria_passed": recovery_criteria_passed,
                 "is_live": is_live,
                 "baseline_inference_mode": baseline_inf_mode,
                 "counterfactual_inference_mode": cf_inf_mode,
                 "model_id": baseline_dec.metadata.get("model_id"),
+                "baseline_supplied_evidence_ids": baseline_dec.metadata.get("supplied_evidence_ids", []),
+                "counterfactual_supplied_evidence_ids": counterfactual_dec.metadata.get("supplied_evidence_ids", []),
+                "baseline_evidence_ids_used": baseline_dec.metadata.get("evidence_ids_used", []),
+                "counterfactual_evidence_ids_used": counterfactual_dec.metadata.get("evidence_ids_used", []),
             },
         )
 
