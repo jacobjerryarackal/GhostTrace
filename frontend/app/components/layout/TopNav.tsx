@@ -73,7 +73,7 @@ export function TopNav() {
               );
             })}
             <a
-              href="https://github.com/JacobTheGreat1337/GhostTrace-AI"
+              href="https://github.com/jacobjerryarackal/GhostTrace/"
               target="_blank"
               rel="noreferrer"
               className="px-3 py-1.5 rounded-[5px] transition-colors hover:text-[var(--ink)] text-[var(--slate)] font-medium"
@@ -125,7 +125,7 @@ export function TopNav() {
             );
           })}
           <a
-            href="https://github.com/JacobTheGreat1337/GhostTrace-AI"
+            href="https://github.com/jacobjerryarackal/GhostTrace/"
             target="_blank"
             rel="noreferrer"
             className="block py-1.5 text-sm transition-colors text-[var(--slate)]"
