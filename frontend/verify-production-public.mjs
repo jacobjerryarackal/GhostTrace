@@ -183,8 +183,9 @@ async function runProductionVerification() {
     if (await previewRevokeBtn.isVisible()) {
       await previewRevokeBtn.click();
       await page.waitForSelector('div[role="dialog"]', { timeout: 10000 });
-      await page.waitForTimeout(1000);
-      console.log('[OK] Blast-radius preview modal opened.');
+      await page.waitForSelector('div[role="dialog"]:has-text("Projected post-revocation destination")', { timeout: 20000 });
+      await page.waitForTimeout(500);
+      console.log('[OK] Blast-radius preview modal loaded with calculated downstream dependencies.');
 
       const modalText = await page.textContent('div[role="dialog"]');
       console.log(`Projected post-revocation destination: ${modalText.includes('US89-ACME-CORP-9876543210')}`);
