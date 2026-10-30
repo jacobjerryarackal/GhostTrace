@@ -28,42 +28,47 @@ export function TopNav() {
         {/* Brand / Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2 text-base font-semibold tracking-tight transition-colors shrink-0"
+          className="group flex items-center gap-2.5 text-base font-semibold tracking-tight transition-transform active:scale-[0.98] shrink-0"
           style={{
             fontFamily: 'var(--font-display, inherit)',
             color: 'var(--ink)',
           }}
         >
           <span
-            className="flex h-5 w-5 items-center justify-center rounded border text-xs font-bold"
+            className="flex h-6 w-6 items-center justify-center rounded-[5px] border text-[11px] font-mono font-bold tracking-tight shadow-none transition-colors group-hover:border-[var(--ink)]"
             style={{
-              borderColor: 'var(--ink)',
-              background: 'var(--chalk)',
+              borderColor: 'var(--hairline)',
+              background: 'var(--surface-subtle)',
               color: 'var(--ink)',
             }}
           >
             GT
           </span>
-          <span>GhostTrace</span>
+          <span className="font-display tracking-tight text-[15px] font-bold">GhostTrace</span>
         </Link>
 
         {/* Desktop Nav Items + Status Chip */}
-        <div className="hidden sm:flex items-center gap-6">
-          <nav className="flex items-center gap-5 text-sm">
+        <div className="hidden sm:flex items-center gap-5">
+          <nav className="flex items-center gap-1 text-xs">
             {navLinks.map((item) => {
               const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="transition-colors pb-0.5"
+                  className="relative px-3 py-1.5 rounded-[5px] transition-colors font-medium"
                   style={{
                     color: isActive ? 'var(--ink)' : 'var(--slate)',
-                    fontWeight: isActive ? 600 : 400,
-                    borderBottom: isActive ? '1.5px solid var(--ink)' : '1.5px solid transparent',
+                    background: isActive ? 'var(--surface-subtle)' : 'transparent',
                   }}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {isActive && (
+                    <span
+                      className="absolute bottom-0 left-3 right-3 h-[1.5px] rounded-full"
+                      style={{ background: 'var(--ink)' }}
+                    />
+                  )}
                 </Link>
               );
             })}
@@ -71,10 +76,9 @@ export function TopNav() {
               href="https://github.com/JacobTheGreat1337/GhostTrace-AI"
               target="_blank"
               rel="noreferrer"
-              className="transition-colors hover:underline"
-              style={{ color: 'var(--slate)' }}
+              className="px-3 py-1.5 rounded-[5px] transition-colors hover:text-[var(--ink)] text-[var(--slate)] font-medium"
             >
-              GitHub
+              GitHub ↗
             </a>
           </nav>
 

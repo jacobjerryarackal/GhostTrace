@@ -456,14 +456,16 @@ export default function MethodPage() {
           <div className="flex items-center gap-3 shrink-0">
             <Link
               href="/investigate"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded border border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] transition-colors"
+              className="btn-press inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded border border-[var(--ink)] bg-[var(--ink)] text-white transition-all shadow-sm"
+              style={{ borderRadius: 'var(--radius-sm)' }}
             >
               <span>Launch workspace</span>
               <ArrowRight size={12} />
             </Link>
             <Link
               href="/benchmark"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded border border-[var(--hairline)] bg-[var(--chalk)] text-[var(--ink)] hover:bg-[var(--paper)] transition-colors"
+              className="btn-press inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold border border-[var(--hairline)] bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--chalk)] transition-all shadow-2xs"
+              style={{ borderRadius: 'var(--radius-sm)' }}
             >
               <span>View benchmark</span>
             </Link>

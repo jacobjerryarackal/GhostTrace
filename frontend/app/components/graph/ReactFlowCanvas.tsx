@@ -16,6 +16,7 @@ import {
 import { ForensicNode } from './ForensicNode';
 import { StainEdge } from './StainEdge';
 import { GraphNodeData } from '@/lib/types';
+import { Layers } from 'lucide-react';
 
 function FitViewTrigger({ nodesLength }: { nodesLength: number }) {
   const { fitView } = useReactFlow();
@@ -23,8 +24,8 @@ function FitViewTrigger({ nodesLength }: { nodesLength: number }) {
   React.useEffect(() => {
     if (nodesLength > 0) {
       const timer = setTimeout(() => {
-        fitView({ padding: 0.25, duration: 250 });
-      }, 60);
+        fitView({ padding: 0.22, duration: 300 });
+      }, 50);
       return () => clearTimeout(timer);
     }
   }, [nodesLength, fitView]);
@@ -60,7 +61,7 @@ export function ReactFlowCanvas({
     }));
   }, [nodes, selectedNodeId]);
 
-  // Update edges with directional arrow markers
+  // Update edges with directional arrow markers matching taint state
   const decoratedEdges = useMemo(() => {
     return edges.map((e) => {
       const isContaminated = Boolean(e.data?.isContaminated);
@@ -80,16 +81,21 @@ export function ReactFlowCanvas({
   if (nodes.length === 0) {
     return (
       <div className="flex h-full w-full items-center justify-center p-8 text-center text-sm text-[var(--slate)] border border-[var(--hairline)] rounded-[10px] bg-[var(--paper)]">
-        <div>
-          <p className="font-medium text-[var(--ink)]">No graph nodes available</p>
-          <p className="mt-1 text-xs">Run the demo scenario or ingest evidence to populate provenance.</p>
+        <div className="max-w-xs space-y-2">
+          <div className="w-10 h-10 mx-auto rounded-full bg-[var(--chalk)] border border-[var(--hairline)] flex items-center justify-center text-[var(--slate)]">
+            <Layers size={18} />
+          </div>
+          <p className="font-semibold text-sm text-[var(--ink)]">No graph nodes available</p>
+          <p className="text-xs text-[var(--slate)] leading-relaxed">
+            Run the demo scenario or ingest evidence to populate real-time provenance tracking.
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative h-full w-full min-h-[300px] flex-1 bg-[var(--chalk)] border border-[var(--hairline)] rounded-[10px] overflow-hidden">
+    <div className="relative h-full w-full min-h-[300px] flex-1 bg-[var(--chalk)] border border-[var(--hairline)] rounded-[10px] overflow-hidden shadow-inner">
       <ReactFlow
         nodes={decoratedNodes}
         edges={decoratedEdges}
@@ -107,14 +113,13 @@ export function ReactFlowCanvas({
         maxZoom={1.8}
         proOptions={{ hideAttribution: true }}
       >
-        <Background gap={20} size={1} color="#CBD2CC" />
+        <Background gap={20} size={1.2} color="rgba(85, 98, 92, 0.22)" />
         <FitViewTrigger nodesLength={nodes.length} />
         <Controls
           showInteractive={false}
-          className="!bg-[var(--paper)] !border-[var(--hairline)] !shadow-none !rounded-[6px] !m-3"
+          className="!bg-[var(--surface-raised)] !border-[var(--hairline)] !shadow-sm !rounded-[6px] !m-3.5 !overflow-hidden"
         />
       </ReactFlow>
     </div>
   );
 }
-

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { RevokePreviewData } from '@/lib/types';
 import { fetchRevokePreview } from '@/lib/api';
-import { AlertTriangle, RotateCcw, X } from 'lucide-react';
+import { AlertTriangle, RotateCcw, X, ShieldAlert } from 'lucide-react';
 
 interface RevokeDialogProps {
   targetId: string | null;
@@ -123,7 +123,7 @@ export function RevokeDialog({
             {/* Invalidation cascade list */}
             <div>
               <span className="text-[11px] font-semibold text-[var(--slate)] block mb-1">
-                Derived memories to be invalidated:
+                Derived memories to be invalidated ({preview.invalidated_memory_ids.length}):
               </span>
               {preview.invalidated_memory_ids.length > 0 ? (
                 <div className="p-2.5 rounded border bg-[var(--chalk)] border-[var(--hairline)] space-y-1.5 max-h-32 overflow-y-auto font-mono text-[11px]">
@@ -170,7 +170,7 @@ export function RevokeDialog({
             type="button"
             onClick={onClose}
             disabled={isRevoking}
-            className="px-3 py-1.5 text-xs font-medium border rounded transition-colors text-[var(--slate)] border-[var(--hairline)] bg-[var(--paper)]"
+            className="btn-press px-3 py-1.5 text-xs font-medium border rounded transition-colors text-[var(--slate)] border-[var(--hairline)] bg-[var(--paper)]"
           >
             Cancel
           </button>
@@ -178,7 +178,7 @@ export function RevokeDialog({
             type="button"
             onClick={() => onConfirmRevoke(targetId)}
             disabled={isRevoking || isLoadingPreview}
-            className="px-3.5 py-1.5 text-xs font-medium rounded border transition-colors flex items-center gap-1.5 text-white"
+            className="btn-press px-3.5 py-1.5 text-xs font-semibold rounded border transition-colors flex items-center gap-1.5 text-white"
             style={{
               background: 'var(--ink)',
               borderColor: 'var(--ink)',
@@ -193,4 +193,3 @@ export function RevokeDialog({
     </div>
   );
 }
-

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
-import { FileText, Brain, Scale, Lock, Check, ShieldAlert } from 'lucide-react';
+import { FileText, Brain, Scale, Lock, Check, ShieldAlert, X } from 'lucide-react';
 import { GraphNodeData } from '@/lib/types';
 
 export type ForensicNodeType = Node<GraphNodeData, 'forensicNode'>;
@@ -19,16 +19,17 @@ export function ForensicNode({ data, selected }: NodeProps<ForensicNodeType>) {
   const isRevoked = status === 'revoked' || status === 'invalidated';
   const isSuspect = !isTrusted && !isRevoked && !isQuarantined && !isConfirmedCausal;
 
-  // Determine visual styling according to DESIGN.md section 2
+  // Determine visual styling according to DESIGN.md black-light forensic tokens
   let containerStyle: React.CSSProperties = {
-    background: 'var(--paper)',
-    border: '1px solid var(--ink)',
+    background: 'var(--surface-raised)',
+    border: '1px solid var(--hairline)',
     color: 'var(--ink)',
   };
 
   let badge = {
     label: isTrusted ? 'Trusted' : status,
-    icon: <Check size={11} className="stroke-[2.5]" />,
+    icon: <Check size={10} className="stroke-[2.5]" />,
+    className: 'text-[var(--ink)] bg-[var(--chalk)] border-[var(--hairline)]',
   };
 
   if (isConfirmedCausal) {
@@ -36,10 +37,12 @@ export function ForensicNode({ data, selected }: NodeProps<ForensicNodeType>) {
       background: 'var(--uv)',
       border: '1.5px solid var(--uv-deep)',
       color: '#ffffff',
+      boxShadow: '0 4px 14px var(--uv-glow)',
     };
     badge = {
       label: 'Confirmed causal',
-      icon: <ShieldAlert size={11} />,
+      icon: <ShieldAlert size={10} />,
+      className: 'text-white bg-[var(--uv-deep)] border-[var(--uv-deep)]',
     };
   } else if (isQuarantined) {
     containerStyle = {
@@ -49,7 +52,8 @@ export function ForensicNode({ data, selected }: NodeProps<ForensicNodeType>) {
     };
     badge = {
       label: 'Quarantined',
-      icon: <Lock size={11} />,
+      icon: <Lock size={10} />,
+      className: 'text-[var(--uv-deep)] bg-white/70 border-[var(--uv)]',
     };
   } else if (isSuspect) {
     containerStyle = {
@@ -59,17 +63,20 @@ export function ForensicNode({ data, selected }: NodeProps<ForensicNodeType>) {
     };
     badge = {
       label: 'Suspect',
-      icon: <ShieldAlert size={11} />,
+      icon: <ShieldAlert size={10} />,
+      className: 'text-[var(--uv-deep)] bg-white/70 border-[var(--uv)]',
     };
   } else if (isRevoked) {
     containerStyle = {
-      background: 'transparent',
-      border: '1px solid var(--hairline)',
+      background: 'var(--chalk)',
+      border: '1px dashed var(--hairline)',
       color: 'var(--slate)',
+      opacity: 0.75,
     };
     badge = {
       label: status === 'invalidated' ? 'Invalidated' : 'Revoked',
-      icon: <span className="text-[10px] leading-none">✕</span>,
+      icon: <X size={10} className="stroke-[2.5]" />,
+      className: 'text-[var(--slate)] bg-transparent border-[var(--hairline)]',
     };
   }
 
@@ -79,9 +86,11 @@ export function ForensicNode({ data, selected }: NodeProps<ForensicNodeType>) {
     containerStyle.outlineOffset = '2px';
   }
 
+  const typeLabel = isEvidence ? 'EVIDENCE' : isMemory ? 'MEMORY' : 'DECISION';
+
   return (
     <div
-      className="relative w-[250px] p-3 rounded-[6px] text-xs transition-colors duration-150 cursor-pointer shadow-none select-none"
+      className="relative w-[260px] p-3 rounded-[8px] text-xs transition-all duration-150 cursor-pointer select-none group hover:scale-[1.01]"
       style={containerStyle}
     >
       {/* Handles for connections */}
@@ -89,7 +98,7 @@ export function ForensicNode({ data, selected }: NodeProps<ForensicNodeType>) {
         <Handle
           type="target"
           position={Position.Left}
-          className="!w-2 !h-2 !bg-[var(--ink)] !border-none"
+          className="!w-2.5 !h-2.5 !border-2 !border-[var(--paper)] transition-transform group-hover:scale-110"
           style={{
             background: isQuarantined || isSuspect || isConfirmedCausal ? 'var(--uv)' : 'var(--ink)',
           }}
@@ -99,22 +108,40 @@ export function ForensicNode({ data, selected }: NodeProps<ForensicNodeType>) {
         <Handle
           type="source"
           position={Position.Right}
-          className="!w-2 !h-2 !bg-[var(--ink)] !border-none"
+          className="!w-2.5 !h-2.5 !border-2 !border-[var(--paper)] transition-transform group-hover:scale-110"
           style={{
             background: isQuarantined || isSuspect || isConfirmedCausal ? 'var(--uv)' : 'var(--ink)',
           }}
         />
       )}
 
-      {/* Header: Type icon, ID (mono), State Indicator */}
-      <div className="flex items-center justify-between pb-1.5 border-b border-inherit opacity-90">
-        <div className="flex items-center gap-1.5">
-          {isEvidence && <FileText size={12} />}
-          {isMemory && <Brain size={12} />}
-          {isDecision && <Scale size={12} />}
-          <span className="font-mono text-[11px] font-normal tracking-tight">{id}</span>
+      {/* Micro-header: Type pill, Monospace ID chip, State badge */}
+      <div className="flex items-center justify-between pb-2 border-b border-inherit/60">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span
+            className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded border"
+            style={{
+              borderColor: isConfirmedCausal ? 'rgba(255,255,255,0.4)' : 'var(--hairline)',
+              background: isConfirmedCausal ? 'rgba(255,255,255,0.15)' : 'var(--chalk)',
+              color: isConfirmedCausal ? '#ffffff' : 'var(--slate)',
+            }}
+          >
+            {isEvidence && <FileText size={9} />}
+            {isMemory && <Brain size={9} />}
+            {isDecision && <Scale size={9} />}
+            <span>{typeLabel}</span>
+          </span>
+          <span
+            className="font-mono text-[11px] font-medium tracking-tight truncate max-w-[100px]"
+            title={id}
+          >
+            {id}
+          </span>
         </div>
-        <div className="flex items-center gap-1 text-[10px] font-medium">
+
+        <div
+          className={`flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border shrink-0 ${badge.className}`}
+        >
           {badge.icon}
           <span>{badge.label}</span>
         </div>
@@ -122,8 +149,12 @@ export function ForensicNode({ data, selected }: NodeProps<ForensicNodeType>) {
 
       {/* Content: Two-line truncated payload with strikethrough if revoked */}
       <div
-        className={`mt-2 text-[11px] leading-snug line-clamp-2 ${isRevoked ? 'line-through opacity-70' : ''
-          }`}
+        className={`mt-2 text-[11px] leading-relaxed line-clamp-2 ${
+          isRevoked ? 'line-through opacity-75' : ''
+        }`}
+        style={{
+          color: isConfirmedCausal ? '#ffffff' : isRevoked ? 'var(--slate)' : 'var(--ink)',
+        }}
       >
         {content}
       </div>

@@ -12,6 +12,14 @@
   --uv-wash: #ECE6FE;    /* suspect fill */
   --alert: #B42318;      /* API or inference errors only */
 
+  /* Subtle derived forensic depth tokens */
+  --uv-soft: rgba(106, 56, 245, 0.08);
+  --uv-glow: rgba(106, 56, 245, 0.18);
+  --uv-border: rgba(106, 56, 245, 0.35);
+  --surface-subtle: #F2F4F0;
+  --surface-raised: #FFFFFF;
+  --hairline-subtle: #DFE3DF;
+
   --font-display: 'Bricolage Grotesque', sans-serif;
   --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -21,6 +29,7 @@
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 html, body {
@@ -37,19 +46,84 @@ body {
   font-family: var(--font-sans);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4, .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   line-height: 1.02;
 }
 
 code, pre, .font-mono {
   font-family: var(--font-mono);
+  font-feature-settings: "tnum" on, "zero" on;
+}
+
+/* Micro-interaction Button / Control feedback */
+.btn-press {
+  transition: transform 120ms var(--ease-out), background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+.btn-press:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.btn-press:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--uv-deep);
+}
+
+/* Slim forensic scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--hairline);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--slate);
+}
+
+/* Forensic dot grid background pattern */
+.bg-forensic-dots {
+  background-image: radial-gradient(var(--hairline) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Pulse animation for active UV contamination */
+@keyframes uv-pulse {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 0px var(--uv-glow));
+  }
+  50% {
+    opacity: 0.85;
+    filter: drop-shadow(0 0 6px var(--uv-glow));
+  }
+}
+
+.animate-uv-pulse {
+  animation: uv-pulse 2.4s var(--ease-inout) infinite;
+}
+
+/* Directional dash animation for contaminated SVG edges */
+@keyframes stain-dash {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+.animate-stain-dash {
+  stroke-dasharray: 6 4;
+  animation: stain-dash 1.2s linear infinite;
 }
 
 /* Reduced motion preference */
@@ -58,5 +132,6 @@ code, pre, .font-mono {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -620,7 +620,7 @@ export default function BenchmarkPage() {
                 <button
                   type="button"
                   onClick={handleCopyCurl}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-sans font-medium rounded border transition-colors"
+                  className="btn-press inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-sans font-medium rounded border transition-all shadow-xs"
                   style={{
                     borderColor: 'var(--ink)',
                     background: copiedCurl ? 'var(--ink)' : 'var(--paper)',
@@ -971,9 +971,9 @@ export default function BenchmarkPage() {
                   key={cat}
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-2.5 py-1 rounded text-xs font-sans whitespace-nowrap transition-colors border ${
+                  className={`btn-press px-2.5 py-1 rounded text-xs font-sans whitespace-nowrap transition-all border ${
                     selectedCategory === cat
-                      ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] font-medium'
+                      ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] font-medium shadow-xs'
                       : 'border-[var(--hairline)] bg-[var(--chalk)] text-[var(--slate)] hover:text-[var(--ink)]'
                   }`}
                   style={{ borderRadius: 'var(--radius-sm)' }}

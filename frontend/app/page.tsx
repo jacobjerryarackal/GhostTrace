@@ -29,7 +29,7 @@ export default function LandingPage() {
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <Link
                   href="/investigate"
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded text-white transition-colors"
+                  className="btn-press inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded text-white transition-all shadow-sm"
                   style={{
                     background: 'var(--ink)',
                     borderRadius: 'var(--radius-sm)',
@@ -41,7 +41,7 @@ export default function LandingPage() {
 
                 <Link
                   href="/method"
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold border rounded transition-colors text-[var(--ink)]"
+                  className="btn-press inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold border rounded transition-all text-[var(--ink)] shadow-2xs"
                   style={{
                     borderColor: 'var(--hairline)',
                     background: 'var(--paper)',

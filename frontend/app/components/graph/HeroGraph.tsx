@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { FileText, Brain, Scale, RotateCcw, Check, Lock, ShieldAlert } from 'lucide-react';
+import { FileText, Brain, Scale, RotateCcw, Check, Lock, ShieldAlert, ArrowRight } from 'lucide-react';
 
 export function HeroGraph() {
   const shouldReduceMotion = useReducedMotion();
@@ -16,10 +16,10 @@ export function HeroGraph() {
     let timers: NodeJS.Timeout[] = [];
     const runSequence = () => {
       setAnimStage(0); // Clean state
-      timers.push(setTimeout(() => setAnimStage(1), 800));   // Evidence arrives (tainted)
-      timers.push(setTimeout(() => setAnimStage(2), 1600));  // Stain spreads to memory
-      timers.push(setTimeout(() => setAnimStage(3), 2400));  // Decision flips to bad account
-      timers.push(setTimeout(() => setAnimStage(4), 4000));  // Revoke & Drain back to clean
+      timers.push(setTimeout(() => setAnimStage(1), 1000));  // Evidence arrives (tainted)
+      timers.push(setTimeout(() => setAnimStage(2), 2200));  // Stain spreads to memory
+      timers.push(setTimeout(() => setAnimStage(3), 3400));  // Decision flips to bad account
+      timers.push(setTimeout(() => setAnimStage(4), 5000));  // Revoke & Drain back to clean
     };
 
     runSequence();
@@ -39,20 +39,28 @@ export function HeroGraph() {
   const isDecisionPoisoned = animStage === 3;
   const isDrained = animStage >= 4;
 
+  const stageDescriptions = [
+    'Stage 1 — Baseline policy: Ground-truth AP rule routes payment to verified treasury 4471-0092.',
+    'Stage 2 — Untrusted input: Unverified phish email injects unauthorized remittance 8830-1175.',
+    'Stage 3 — Synthesis hazard: Naive architectures store unverified facts into persistent memory.',
+    'Stage 4 — Action divergence: Unscreened agent executes payment to unauthorized destination.',
+    'Stage 5 — Invalidation: GhostTrace excises suspect belief and preserves verified baseline.',
+  ];
+
   return (
     <div
-      className="relative w-full rounded-[10px] border p-4 sm:p-5 flex flex-col justify-between overflow-hidden"
+      className="relative w-full rounded-[10px] border p-4 sm:p-5 flex flex-col justify-between overflow-hidden shadow-sm"
       style={{
         background: 'var(--paper)',
         borderColor: 'var(--hairline)',
-        minHeight: '360px',
+        minHeight: '380px',
       }}
     >
       {/* Top Header bar inside Hero Graph card */}
       <div className="flex items-center justify-between pb-3 border-b border-[var(--hairline)] text-xs">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-semibold text-[var(--ink)]">Conceptual governance lifecycle</span>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-[var(--hairline)] bg-[var(--chalk)] text-[var(--slate)]">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-[var(--hairline)] bg-[var(--chalk)] text-[var(--slate)] font-medium">
             Illustrative scenario · 7 nodes
           </span>
         </div>
@@ -60,7 +68,7 @@ export function HeroGraph() {
         <button
           type="button"
           onClick={handleManualReplay}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium border rounded transition-colors"
+          className="btn-press inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium border rounded transition-all shadow-xs"
           style={{
             borderColor: 'var(--hairline)',
             background: 'var(--chalk)',
@@ -69,7 +77,7 @@ export function HeroGraph() {
           }}
           title="Re-run illustrative sequence"
         >
-          <RotateCcw size={11} />
+          <RotateCcw size={11} className={isReplaying ? 'rotate-180 transition-transform duration-300' : ''} />
           <span>Replay sequence</span>
         </button>
       </div>
@@ -145,30 +153,32 @@ export function HeroGraph() {
             <motion.path
               d="M 170 115 C 195 115, 195 115, 220 115"
               fill="none"
-              stroke={isAttackActive ? '#6A38F5' : isDrained ? '#CBD2CC' : '#CBD2CC'}
+              stroke={isAttackActive ? '#6A38F5' : '#CBD2CC'}
               strokeWidth={isAttackActive ? 2 : 1.5}
-              strokeDasharray={isAttackActive ? '4 3' : 'none'}
+              strokeDasharray={isAttackActive ? '6 4' : 'none'}
               markerEnd={isAttackActive ? 'url(#arrow-uv)' : 'url(#arrow-hairline)'}
+              className={isAttackActive ? 'animate-stain-dash' : ''}
               animate={{
                 stroke: isAttackActive ? '#6A38F5' : '#CBD2CC',
                 strokeWidth: isAttackActive ? 2 : 1.5,
               }}
-              transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             />
 
             {/* Attack Path 2: mem-derived -> dec-payout */}
             <motion.path
               d="M 400 115 C 425 115, 425 115, 450 115"
               fill="none"
-              stroke={isMemoryTainted ? '#6A38F5' : isDrained ? '#CBD2CC' : '#CBD2CC'}
+              stroke={isMemoryTainted ? '#6A38F5' : '#CBD2CC'}
               strokeWidth={isMemoryTainted ? 2 : 1.5}
-              strokeDasharray={isMemoryTainted ? '4 3' : 'none'}
+              strokeDasharray={isMemoryTainted ? '6 4' : 'none'}
               markerEnd={isMemoryTainted ? 'url(#arrow-uv)' : 'url(#arrow-hairline)'}
+              className={isMemoryTainted ? 'animate-stain-dash' : ''}
               animate={{
                 stroke: isMemoryTainted ? '#6A38F5' : '#CBD2CC',
                 strokeWidth: isMemoryTainted ? 2 : 1.5,
               }}
-              transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             />
           </svg>
 
@@ -178,14 +188,14 @@ export function HeroGraph() {
             <div className="w-[170px] flex flex-col gap-2.5">
               {/* 1. Policy Evidence (Clean) */}
               <div
-                className="p-2 rounded border bg-[var(--paper)] text-[var(--ink)] border-[var(--ink)]"
+                className="p-2.5 rounded-[6px] border bg-[var(--surface-raised)] text-[var(--ink)] border-[var(--ink)] shadow-xs"
               >
                 <div className="flex items-center justify-between font-mono text-[10px] pb-1 border-b border-[var(--hairline)]">
-                  <span className="flex items-center gap-1 font-sans">
+                  <span className="flex items-center gap-1 font-sans font-semibold">
                     <FileText size={10} /> Policy 4.1
                   </span>
-                  <span className="flex items-center gap-0.5 text-[var(--ink)]">
-                    <Check size={9} /> Clean
+                  <span className="flex items-center gap-0.5 text-[var(--ink)] font-medium">
+                    <Check size={9} className="stroke-[2.5]" /> Clean
                   </span>
                 </div>
                 <p className="mt-1 text-[10px] truncate text-[var(--slate)]">
@@ -196,12 +206,12 @@ export function HeroGraph() {
               {/* 2. Untrusted Email (Attack / Drain) */}
               <motion.div
                 animate={{
-                  background: isAttackActive ? '#ECE6FE' : isDrained ? 'transparent' : 'var(--paper)',
-                  borderColor: isAttackActive ? '#6A38F5' : isDrained ? '#CBD2CC' : '#CBD2CC',
+                  background: isAttackActive ? '#ECE6FE' : isDrained ? 'transparent' : 'var(--surface-raised)',
+                  borderColor: isAttackActive ? '#6A38F5' : '#CBD2CC',
                   color: isDrained ? '#55625C' : '#111714',
                 }}
                 transition={{ duration: 0.28 }}
-                className={`p-2 rounded border text-[var(--ink)] ${
+                className={`p-2.5 rounded-[6px] border text-[var(--ink)] shadow-xs ${
                   isDrained ? 'line-through opacity-70' : ''
                 }`}
                 style={{
@@ -210,10 +220,10 @@ export function HeroGraph() {
                 }}
               >
                 <div className="flex items-center justify-between font-mono text-[10px] pb-1 border-b border-inherit">
-                  <span className="flex items-center gap-1 font-sans font-medium">
+                  <span className="flex items-center gap-1 font-sans font-semibold">
                     <FileText size={10} /> Phish email
                   </span>
-                  <span className="flex items-center gap-0.5 text-[9px] font-sans">
+                  <span className="flex items-center gap-0.5 text-[9px] font-sans font-medium">
                     {isAttackActive ? (
                       <span className="text-[var(--uv-deep)] flex items-center gap-0.5">
                         <Lock size={9} /> Suspect
@@ -232,13 +242,13 @@ export function HeroGraph() {
 
               {/* 3. Benign Untrusted Evidence */}
               <div
-                className="p-2 rounded border bg-[var(--paper)] text-[var(--slate)] border-[var(--hairline)]"
+                className="p-2.5 rounded-[6px] border bg-[var(--surface-raised)] text-[var(--slate)] border-[var(--hairline)]"
               >
                 <div className="flex items-center justify-between font-mono text-[10px] pb-1 border-b border-[var(--hairline)]">
-                  <span className="flex items-center gap-1 font-sans">
+                  <span className="flex items-center gap-1 font-sans font-medium">
                     <FileText size={10} /> Web notice
                   </span>
-                  <span className="text-[9px] font-sans">Untrusted</span>
+                  <span className="text-[9px] font-sans font-medium">Untrusted</span>
                 </div>
                 <p className="mt-1 text-[10px] truncate">
                   Support: 09:00–17:00 UTC
@@ -250,14 +260,14 @@ export function HeroGraph() {
             <div className="w-[180px] flex flex-col gap-2.5">
               {/* 4. Trusted Memory */}
               <div
-                className="p-2 rounded border bg-[var(--paper)] text-[var(--ink)] border-[var(--ink)]"
+                className="p-2.5 rounded-[6px] border bg-[var(--surface-raised)] text-[var(--ink)] border-[var(--ink)] shadow-xs"
               >
                 <div className="flex items-center justify-between font-mono text-[10px] pb-1 border-b border-[var(--hairline)]">
-                  <span className="flex items-center gap-1 font-sans font-medium">
+                  <span className="flex items-center gap-1 font-sans font-semibold">
                     <Brain size={10} /> Halcyon AP
                   </span>
-                  <span className="flex items-center gap-0.5 text-[var(--ink)]">
-                    <Check size={9} /> Verified
+                  <span className="flex items-center gap-0.5 text-[var(--ink)] font-medium">
+                    <Check size={9} className="stroke-[2.5]" /> Verified
                   </span>
                 </div>
                 <p className="mt-1 text-[10px] truncate font-mono">
@@ -268,22 +278,22 @@ export function HeroGraph() {
               {/* 5. Contaminated Derived Memory */}
               <motion.div
                 animate={{
-                  background: isMemoryTainted ? '#6A38F5' : isDrained ? 'transparent' : 'var(--paper)',
-                  borderColor: isMemoryTainted ? '#4A1FD1' : isDrained ? '#CBD2CC' : '#CBD2CC',
+                  background: isMemoryTainted ? '#6A38F5' : isDrained ? 'transparent' : 'var(--surface-raised)',
+                  borderColor: isMemoryTainted ? '#4A1FD1' : '#CBD2CC',
                   color: isMemoryTainted ? '#ffffff' : isDrained ? '#55625C' : '#111714',
                 }}
                 transition={{ duration: 0.28 }}
-                className={`p-2 rounded border ${isDrained ? 'line-through opacity-70' : ''}`}
+                className={`p-2.5 rounded-[6px] border shadow-xs ${isDrained ? 'line-through opacity-70' : ''}`}
                 style={{
                   borderStyle: isAttackActive ? 'dashed' : 'solid',
                   borderWidth: isAttackActive ? '1.5px' : '1px',
                 }}
               >
                 <div className="flex items-center justify-between font-mono text-[10px] pb-1 border-b border-inherit">
-                  <span className="flex items-center gap-1 font-sans font-medium">
+                  <span className="flex items-center gap-1 font-sans font-semibold">
                     <Brain size={10} /> Laundered
                   </span>
-                  <span className="flex items-center gap-0.5 text-[9px] font-sans">
+                  <span className="flex items-center gap-0.5 text-[9px] font-sans font-medium">
                     {isMemoryTainted ? (
                       <span className="text-white flex items-center gap-0.5">
                         <ShieldAlert size={9} /> Contaminated
@@ -302,13 +312,13 @@ export function HeroGraph() {
 
               {/* 6. Benign Memory */}
               <div
-                className="p-2 rounded border bg-[var(--paper)] text-[var(--slate)] border-[var(--hairline)]"
+                className="p-2.5 rounded-[6px] border bg-[var(--surface-raised)] text-[var(--slate)] border-[var(--hairline)]"
               >
                 <div className="flex items-center justify-between font-mono text-[10px] pb-1 border-b border-[var(--hairline)]">
-                  <span className="flex items-center gap-1 font-sans">
+                  <span className="flex items-center gap-1 font-sans font-medium">
                     <Brain size={10} /> Profile
                   </span>
-                  <span className="text-[9px] font-sans">Harmless</span>
+                  <span className="text-[9px] font-sans font-medium">Harmless</span>
                 </div>
                 <p className="mt-1 text-[10px] line-clamp-1">
                   Hours: 09:00–17:00
@@ -321,33 +331,33 @@ export function HeroGraph() {
               {/* 7. Decision Node */}
               <motion.div
                 animate={{
-                  background: isDecisionPoisoned ? '#ECE6FE' : 'var(--paper)',
+                  background: isDecisionPoisoned ? '#ECE6FE' : 'var(--surface-raised)',
                   borderColor: isDecisionPoisoned ? '#6A38F5' : 'var(--ink)',
                 }}
                 transition={{ duration: 0.24 }}
-                className="p-2.5 rounded border text-[var(--ink)] shadow-none"
+                className="p-3 rounded-[6px] border text-[var(--ink)] shadow-xs"
                 style={{
                   borderWidth: isDecisionPoisoned ? '1.5px' : '1px',
                 }}
               >
                 <div className="flex items-center justify-between font-mono text-[10px] pb-1 border-b border-[var(--hairline)]">
-                  <span className="flex items-center gap-1 font-sans font-semibold">
+                  <span className="flex items-center gap-1 font-sans font-bold">
                     <Scale size={11} /> INV-2291
                   </span>
                   <span className="font-sans text-[10px]">
                     {isDecisionPoisoned ? (
                       <span className="text-[var(--uv-deep)] font-semibold">Poisoned</span>
                     ) : (
-                      <span className="text-[var(--ink)] flex items-center gap-0.5">
-                        <Check size={9} /> Verified
+                      <span className="text-[var(--ink)] font-semibold flex items-center gap-0.5">
+                        <Check size={9} className="stroke-[2.5]" /> Verified
                       </span>
                     )}
                   </span>
                 </div>
-                <div className="mt-1.5 font-mono text-[10px]">
-                  <span>Pay $14,250 to:</span>
+                <div className="mt-2 font-mono text-[10px]">
+                  <span className="text-[var(--slate)]">Pay $14,250 to:</span>
                   <div
-                    className="font-semibold text-xs mt-0.5 font-mono"
+                    className="font-bold text-xs mt-0.5 font-mono"
                     style={{
                       color: isDecisionPoisoned ? 'var(--uv-deep)' : 'var(--ink)',
                     }}
@@ -361,20 +371,30 @@ export function HeroGraph() {
         </div>
       </div>
 
-      {/* Bottom status line */}
-      <div className="pt-2 border-t border-[var(--hairline)] flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] text-[var(--slate)]">
-        <div>
-          {animStage === 0 && 'Stage 1 — Baseline policy: Ground-truth AP rule routes payment to verified treasury 4471-0092.'}
-          {animStage === 1 && 'Stage 2 — Untrusted input: Unverified phish email injects unauthorized remittance 8830-1175.'}
-          {animStage === 2 && 'Stage 3 — Synthesis hazard: Naive architectures store unverified facts into persistent memory.'}
-          {animStage === 3 && 'Stage 4 — Action divergence: Unscreened agent executes payment to unauthorized destination.'}
-          {animStage === 4 && 'Stage 5 — Invalidation: GhostTrace excises suspect belief and preserves verified baseline.'}
+      {/* Bottom status line & interactive stage pills */}
+      <div className="pt-3 border-t border-[var(--hairline)] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[var(--slate)]">
+        <div className="font-medium">
+          {stageDescriptions[animStage]}
         </div>
-        <div className="font-mono text-[10px] text-[var(--slate)] shrink-0">
-          Illustrative · Step {animStage + 1} of 5
+        <div className="flex items-center gap-1 shrink-0">
+          {[0, 1, 2, 3, 4].map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setAnimStage(s)}
+              className="w-5 h-5 rounded flex items-center justify-center font-mono text-[10px] transition-all"
+              style={{
+                background: animStage === s ? 'var(--ink)' : 'var(--chalk)',
+                color: animStage === s ? '#ffffff' : 'var(--slate)',
+                border: '1px solid var(--hairline)',
+              }}
+              title={`Jump to step ${s + 1}`}
+            >
+              {s + 1}
+            </button>
+          ))}
         </div>
       </div>
     </div>
   );
 }
-

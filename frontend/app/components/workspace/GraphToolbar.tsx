@@ -24,7 +24,7 @@ export function GraphToolbar({
 }: GraphToolbarProps) {
   return (
     <div
-      className="flex items-center justify-between gap-3 px-3.5 py-2 border-b bg-[var(--paper)] overflow-x-auto whitespace-nowrap"
+      className="flex items-center justify-between gap-3 px-3.5 py-2 border-b bg-[var(--surface-raised)] overflow-x-auto whitespace-nowrap"
       style={{ borderColor: 'var(--hairline)' }}
     >
       <div className="flex items-center gap-2 shrink-0">
@@ -32,7 +32,7 @@ export function GraphToolbar({
           type="button"
           onClick={onOpenIngest}
           disabled={isLoading}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border rounded transition-colors"
+          className="btn-press inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded transition-all shadow-xs"
           style={{
             borderColor: 'var(--hairline)',
             background: 'var(--paper)',
@@ -41,7 +41,7 @@ export function GraphToolbar({
           }}
           title="Ingest custom evidence with live screening"
         >
-          <Plus size={13} />
+          <Plus size={13} className="text-[var(--slate)]" />
           <span>Ingest evidence</span>
         </button>
 
@@ -49,7 +49,7 @@ export function GraphToolbar({
           type="button"
           onClick={onOpenAsk}
           disabled={isLoading}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border rounded transition-colors"
+          className="btn-press inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded transition-all shadow-xs"
           style={{
             borderColor: 'var(--hairline)',
             background: 'var(--paper)',
@@ -58,7 +58,7 @@ export function GraphToolbar({
           }}
           title="Query the agent to compare protected vs unprotected response"
         >
-          <HelpCircle size={13} />
+          <HelpCircle size={13} className="text-[var(--slate)]" />
           <span>Ask agent</span>
         </button>
 
@@ -66,7 +66,7 @@ export function GraphToolbar({
           type="button"
           onClick={onRunReplay}
           disabled={isLoading || !hasSuspects}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border rounded transition-colors"
+          className="btn-press inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded transition-all shadow-xs"
           style={{
             borderColor: hasSuspects ? 'var(--uv)' : 'var(--hairline)',
             background: hasSuspects ? 'var(--uv-wash)' : 'var(--paper)',
@@ -80,11 +80,11 @@ export function GraphToolbar({
         </button>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         <button
           type="button"
           onClick={onExportTrace}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border rounded transition-colors"
+          className="btn-press inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded transition-all"
           style={{
             borderColor: 'var(--hairline)',
             background: 'var(--paper)',
@@ -101,7 +101,7 @@ export function GraphToolbar({
           type="button"
           onClick={onOpenReset}
           disabled={isLoading}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border rounded transition-colors"
+          className="btn-press inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded transition-all"
           style={{
             borderColor: 'var(--hairline)',
             background: 'var(--paper)',
@@ -117,4 +117,3 @@ export function GraphToolbar({
     </div>
   );
 }
-

@@ -57,7 +57,7 @@ export function StatusChip() {
   if (nebius?.status === 'authentication_failed' || nebius?.status === 'unavailable') {
     return (
       <div
-        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs border rounded transition-colors cursor-default"
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium border rounded-[5px] transition-colors cursor-default select-none shadow-none"
         style={{
           borderColor: 'var(--alert)',
           color: 'var(--alert)',
@@ -77,26 +77,43 @@ export function StatusChip() {
   if (hasLiveCallSucceeded && nebius?.status === 'connected') {
     return (
       <div
-        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs border rounded transition-colors cursor-default"
+        className="inline-flex items-center gap-2 px-2.5 py-1 text-[11px] font-medium border rounded-[5px] transition-colors cursor-default select-none shadow-none"
         style={{
           borderColor: 'var(--ink)',
           color: 'var(--ink)',
           background: 'var(--paper)',
         }}
-        title={`Live model call verified (${nebius.latency_ms ? `${nebius.latency_ms}ms` : 'active'})`}
+        title={`Live model call verified: nvidia/nemotron-3-super-120b-a12b (${nebius.latency_ms ? `${Math.round(nebius.latency_ms)}ms` : 'active'})`}
       >
-        <span
-          className="w-1.5 h-1.5 rounded-full"
-          style={{ background: 'var(--ink)' }}
-        />
-        <span>Live</span>
+        <span className="relative flex h-2 w-2">
+          <span
+            className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
+            style={{ background: 'var(--ink)' }}
+          />
+          <span
+            className="relative inline-flex rounded-full h-2 w-2"
+            style={{ background: 'var(--ink)' }}
+          />
+        </span>
+        <span className="font-semibold">Live</span>
+        {Boolean(nebius.latency_ms) && (
+          <span
+            className="font-mono text-[10px] pl-1.5 border-l"
+            style={{
+              borderColor: 'var(--hairline)',
+              color: 'var(--slate)',
+            }}
+          >
+            {Math.round(nebius.latency_ms!)}ms
+          </span>
+        )}
       </div>
     );
   }
 
   return (
     <div
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs border rounded transition-colors cursor-default"
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium border rounded-[5px] transition-colors cursor-default select-none shadow-none"
       style={{
         borderColor: 'var(--hairline)',
         color: 'var(--slate)',

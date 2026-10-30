@@ -113,7 +113,7 @@ export function IngestDialog({
               type="text"
               value={source}
               onChange={(e) => setSource(e.target.value)}
-              className="w-full p-2 border rounded font-mono text-xs bg-[var(--chalk)] text-[var(--ink)]"
+              className="w-full p-2.5 border rounded font-mono text-xs bg-[var(--chalk)] text-[var(--ink)] focus:outline-none focus:border-[var(--ink)]"
               style={{ borderColor: 'var(--hairline)' }}
               placeholder="e.g. untrusted_webhook, email_attachment, web_crawl"
               required
@@ -128,7 +128,7 @@ export function IngestDialog({
               rows={4}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full p-2.5 border rounded font-mono text-xs leading-relaxed bg-[var(--chalk)] text-[var(--ink)]"
+              className="w-full p-2.5 border rounded font-mono text-xs leading-relaxed bg-[var(--chalk)] text-[var(--ink)] focus:outline-none focus:border-[var(--ink)]"
               style={{ borderColor: 'var(--hairline)' }}
               placeholder="Enter invoice, email, or webhook content..."
               required
@@ -154,14 +154,14 @@ export function IngestDialog({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-3 py-1.5 text-xs font-medium border rounded transition-colors text-[var(--slate)] border-[var(--hairline)] bg-[var(--paper)]"
+              className="btn-press px-3 py-1.5 text-xs font-medium border rounded transition-colors text-[var(--slate)] border-[var(--hairline)] bg-[var(--paper)]"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-3.5 py-1.5 text-xs font-medium rounded border transition-colors flex items-center gap-1.5 text-white"
+              className="btn-press px-3.5 py-1.5 text-xs font-semibold rounded border transition-colors flex items-center gap-1.5 text-white"
               style={{
                 background: 'var(--ink)',
                 borderColor: 'var(--ink)',
@@ -176,4 +176,3 @@ export function IngestDialog({
     </div>
   );
 }
-

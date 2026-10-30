@@ -57,7 +57,7 @@ export function AskDialog({ isOpen, onClose, cleanDestination }: AskDialogProps)
               type="text"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="w-full p-2 border rounded font-mono text-xs bg-[var(--chalk)] text-[var(--ink)]"
+              className="w-full p-2.5 border rounded font-mono text-xs bg-[var(--chalk)] text-[var(--ink)] focus:outline-none focus:border-[var(--ink)]"
               style={{ borderColor: 'var(--hairline)' }}
             />
           </div>
@@ -66,7 +66,7 @@ export function AskDialog({ isOpen, onClose, cleanDestination }: AskDialogProps)
             <button
               type="button"
               onClick={() => setHasEvaluated(true)}
-              className="px-3 py-1.5 text-xs font-medium rounded border transition-colors text-white"
+              className="btn-press px-3.5 py-1.5 text-xs font-semibold rounded border transition-colors text-white"
               style={{
                 background: 'var(--ink)',
                 borderColor: 'var(--ink)',
@@ -92,7 +92,7 @@ export function AskDialog({ isOpen, onClose, cleanDestination }: AskDialogProps)
                     <Shield size={12} />
                     <span>GhostTrace Protected Context</span>
                   </span>
-                  <span className="text-[10px] font-mono px-1 rounded bg-[var(--chalk)] text-[var(--ink)]">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--chalk)] text-[var(--ink)] border border-[var(--hairline)] font-medium">
                     Protected
                   </span>
                 </div>
@@ -100,7 +100,7 @@ export function AskDialog({ isOpen, onClose, cleanDestination }: AskDialogProps)
                   {cleanDestination}
                 </div>
                 <p className="mt-1 text-[11px] text-[var(--slate)]">
-                  Quarantine boundary blocks untrusted prompts and derived memories. Payment routes strictly according to verified treasury policy.
+                  Ground truth corporate treasury destination. Contaminated memory excluded from LLM inference context.
                 </p>
               </div>
 
@@ -115,9 +115,9 @@ export function AskDialog({ isOpen, onClose, cleanDestination }: AskDialogProps)
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-semibold text-[var(--uv-deep)] flex items-center gap-1.5">
                     <AlertOctagon size={12} />
-                    <span>Naive Baseline (Unprotected)</span>
+                    <span>Unprotected Naive Context</span>
                   </span>
-                  <span className="text-[10px] font-mono px-1 rounded bg-[var(--chalk)] text-[var(--uv-deep)] border border-[var(--uv)]">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--uv)] text-white font-medium">
                     Vulnerable
                   </span>
                 </div>
@@ -125,7 +125,7 @@ export function AskDialog({ isOpen, onClose, cleanDestination }: AskDialogProps)
                   KY11-VAULT-ATTACKER-133742
                 </div>
                 <p className="mt-1 text-[11px] text-[var(--slate)]">
-                  Without provenance tracking or quarantine, naive memory retrieval prioritizes recent untrusted emails and redirects funds to attacker escrow.
+                  Adversarial destination injected via unverified webhook. Retrieved and executed blindly without provenance validation.
                 </p>
               </div>
             </div>
@@ -135,4 +135,3 @@ export function AskDialog({ isOpen, onClose, cleanDestination }: AskDialogProps)
     </div>
   );
 }
-

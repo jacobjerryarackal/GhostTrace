@@ -26,7 +26,7 @@ export function ResetDialog({
       onClick={() => !isResetting && onClose()}
     >
       <div
-        className="w-full max-w-md rounded-[10px] border p-5 shadow-2xl space-y-4"
+        className="modal-content w-full max-w-md rounded-[10px] border p-5 shadow-2xl space-y-4"
         style={{
           background: 'var(--paper)',
           borderColor: 'var(--hairline)',
@@ -38,7 +38,7 @@ export function ResetDialog({
         <div className="flex items-center justify-between pb-3 border-b border-[var(--hairline)]">
           <div className="flex items-center gap-2">
             <RotateCcw size={15} className="text-[var(--ink)]" />
-            <h2 className="text-sm font-semibold tracking-tight">
+            <h2 id="reset-dialog-title" className="text-sm font-semibold tracking-tight">
               Reset demo scenario
             </h2>
           </div>
@@ -66,7 +66,7 @@ export function ResetDialog({
             type="button"
             onClick={onClose}
             disabled={isResetting}
-            className="px-3 py-1.5 text-xs font-medium border rounded transition-colors text-[var(--slate)] border-[var(--hairline)] bg-[var(--paper)]"
+            className="btn-press px-3 py-1.5 text-xs font-medium border rounded transition-colors text-[var(--slate)] border-[var(--hairline)] bg-[var(--paper)]"
           >
             Cancel
           </button>
@@ -74,7 +74,7 @@ export function ResetDialog({
             type="button"
             onClick={onConfirmReset}
             disabled={isResetting}
-            className="px-3.5 py-1.5 text-xs font-medium rounded border transition-colors flex items-center gap-1.5 text-white"
+            className="btn-press px-3.5 py-1.5 text-xs font-semibold rounded border transition-colors flex items-center gap-1.5 text-white"
             style={{
               background: 'var(--ink)',
               borderColor: 'var(--ink)',
@@ -89,4 +89,3 @@ export function ResetDialog({
     </div>
   );
 }
-
