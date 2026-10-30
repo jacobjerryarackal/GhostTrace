@@ -46,6 +46,12 @@ export default function InvestigatePage() {
   const [isResetting, setIsResetting] = useState<boolean>(false);
   const [isRevoking, setIsRevoking] = useState<boolean>(false);
   const [mobileDrawer, setMobileDrawer] = useState<'none' | 'rail' | 'inspector'>('none');
+  const [revokeSummary, setRevokeSummary] = useState<{
+    revokedId: string;
+    invalidatedCount: number;
+    recoveryStatus: string;
+    recoveredDestination: string;
+  } | null>(null);
 
   // Dialog states
   const [isRevokeOpen, setIsRevokeOpen] = useState(false);
@@ -158,10 +164,16 @@ export default function InvestigatePage() {
   const handleConfirmRevoke = async (targetId: string) => {
     setIsRevoking(true);
     try {
-      await executeRevoke(targetId, 'Revoked via forensic workspace interface');
+      const res = await executeRevoke(targetId, 'Revoked via forensic workspace interface');
       setIsRevokeOpen(false);
       setRevokeTargetId(null);
       setCurrentStep(6);
+      setRevokeSummary({
+        revokedId: res.revoked_id,
+        invalidatedCount: res.invalidated_memory_ids?.length || 0,
+        recoveryStatus: res.clean_reference_comparison?.recovery_status || 'CLEAN_BASELINE_PRESERVED',
+        recoveredDestination: res.clean_reference_comparison?.recovered_destination || 'US89-ACME-CORP-9876543210',
+      });
       await loadWorkspaceData();
     } catch (err: any) {
       alert(`Revocation failed: ${err.message}`);
@@ -177,6 +189,7 @@ export default function InvestigatePage() {
       await resetDemo();
       setLatestReplay(null);
       setSelectedNode(null);
+      setRevokeSummary(null);
       setCurrentStep(1);
       setIsResetOpen(false);
       await loadWorkspaceData();
@@ -279,6 +292,43 @@ export default function InvestigatePage() {
         isLoading={isLoading}
         hasSuspects={suspectNodes.length > 0}
       />
+
+      {/* Revocation & Invalidation Outcome Banner */}
+      {revokeSummary && (
+        <div
+          className="mx-3 my-2 p-2.5 rounded border text-xs flex items-center justify-between shrink-0 transition-all"
+          style={{
+            background: 'var(--paper)',
+            borderColor: 'var(--ink)',
+          }}
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-[var(--ink)]">Revocation verified</span>
+            <span className="text-[var(--slate)] font-mono text-[11px]">({revokeSummary.revokedId})</span>
+            <span className="text-[var(--slate)]">·</span>
+            <span className="text-[var(--slate)] font-medium">
+              Derived memory invalidated ({revokeSummary.invalidatedCount} {revokeSummary.invalidatedCount === 1 ? 'record' : 'records'})
+            </span>
+            <span className="text-[var(--slate)]">·</span>
+            <span className="text-[var(--ink)] font-semibold">
+              {revokeSummary.recoveryStatus === 'RECOVERY_PROVED'
+                ? 'Decision recovery demonstrated'
+                : 'Clean baseline preserved'}
+            </span>
+            <span className="text-[var(--slate)] font-mono text-[11px]">
+              → {revokeSummary.recoveredDestination}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRevokeSummary(null)}
+            className="text-xs text-[var(--slate)] hover:text-[var(--ink)] px-1.5 py-0.5 ml-2 rounded hover:bg-[var(--chalk)]"
+            title="Dismiss notification"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Mobile view toggles */}
       <div

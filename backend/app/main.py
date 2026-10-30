@@ -58,10 +58,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS Middleware restricted to configured origins
+# CORS Middleware restricted to configured origins and Vercel domains
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins or ["*"],
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],

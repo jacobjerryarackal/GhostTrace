@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ReplayData, AuditEventData } from '@/lib/types';
-import { ChevronUp, ChevronDown, Check, AlertOctagon, Clock } from 'lucide-react';
+import { ChevronUp, ChevronDown, Check, AlertOctagon, Clock, Info, ShieldCheck } from 'lucide-react';
 
 interface ComparisonDrawerProps {
   latestReplay: ReplayData | null;
@@ -26,11 +26,20 @@ export function ComparisonDrawer({
 
   const baseline = latestReplay?.baseline_outcome;
   const counterfactual = latestReplay?.counterfactual_outcome;
-  const dependenceDetected = latestReplay?.behavioral_dependence_detected;
+  const dependenceDetected = Boolean(latestReplay?.behavioral_dependence_detected);
 
   const cleanDest = cleanReference?.approved_destination || 'US89-ACME-CORP-9876543210';
-  const isDivergent = baseline && counterfactual && baseline.target_destination !== counterfactual.target_destination;
-  const isRecovered = counterfactual && counterfactual.target_destination === cleanDest;
+  const isDivergent = Boolean(
+    baseline && counterfactual && (
+      baseline.target_destination !== counterfactual.target_destination ||
+      baseline.action !== counterfactual.action
+    )
+  );
+  const isRecovered = Boolean(counterfactual && counterfactual.target_destination === cleanDest);
+  const isCleanBaselinePreserved = Boolean(
+    baseline && counterfactual && !isDivergent && baseline.target_destination === cleanDest
+  );
+  const isDecisionRecoveryDemonstrated = Boolean(isDivergent && isRecovered);
 
   return (
     <div
@@ -122,21 +131,35 @@ export function ComparisonDrawer({
                   <div
                     className="p-2.5 rounded border text-xs flex items-center justify-between"
                     style={{
-                      background: dependenceDetected ? 'var(--uv-wash)' : 'var(--paper)',
-                      borderColor: dependenceDetected ? 'var(--uv)' : 'var(--hairline)',
-                      color: dependenceDetected ? 'var(--uv-deep)' : 'var(--ink)',
+                      background: isDecisionRecoveryDemonstrated
+                        ? 'var(--uv-wash)'
+                        : isCleanBaselinePreserved
+                        ? 'var(--chalk)'
+                        : 'var(--paper)',
+                      borderColor: isDecisionRecoveryDemonstrated
+                        ? 'var(--uv)'
+                        : isCleanBaselinePreserved
+                        ? 'var(--hairline)'
+                        : 'var(--hairline)',
+                      color: isDecisionRecoveryDemonstrated
+                        ? 'var(--uv-deep)'
+                        : 'var(--ink)',
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      {dependenceDetected ? (
+                      {isDecisionRecoveryDemonstrated ? (
                         <AlertOctagon size={15} />
+                      ) : isCleanBaselinePreserved ? (
+                        <ShieldCheck size={15} className="text-[var(--ink)]" />
                       ) : (
-                        <Check size={15} />
+                        <Info size={15} className="text-[var(--slate)]" />
                       )}
                       <span className="font-semibold">
-                        {dependenceDetected
-                          ? 'Behavioral dependence detected'
-                          : 'Replay inconclusive or independent'}
+                        {isDecisionRecoveryDemonstrated
+                          ? 'Decision recovery demonstrated'
+                          : isCleanBaselinePreserved
+                          ? 'Clean baseline preserved (Causal influence inconclusive)'
+                          : 'Causal influence inconclusive / independent'}
                       </span>
                       <span className="text-[11px] opacity-80 font-normal">
                         — {latestReplay.consistency_assessment}
@@ -181,15 +204,26 @@ export function ComparisonDrawer({
                     <div
                       className="p-3 rounded border text-xs bg-[var(--paper)]"
                       style={{
-                        borderColor: isRecovered ? 'var(--ink)' : 'var(--hairline)',
+                        borderColor: isDecisionRecoveryDemonstrated ? 'var(--ink)' : 'var(--hairline)',
                       }}
                     >
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="font-semibold text-[var(--ink)]">
                           2. Counterfactual replay
                         </span>
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-[var(--ink)] text-[var(--ink)] bg-[var(--chalk)]">
-                          Excision
+                        <span
+                          className="text-[10px] font-mono px-1.5 py-0.5 rounded border"
+                          style={{
+                            borderColor: isDecisionRecoveryDemonstrated ? 'var(--ink)' : 'var(--hairline)',
+                            background: isDecisionRecoveryDemonstrated ? 'var(--chalk)' : 'var(--paper)',
+                            color: isDecisionRecoveryDemonstrated ? 'var(--ink)' : 'var(--slate)',
+                          }}
+                        >
+                          {isDecisionRecoveryDemonstrated
+                            ? 'Decision recovered'
+                            : isCleanBaselinePreserved
+                            ? 'Clean baseline preserved'
+                            : 'Counterfactual replay'}
                         </span>
                       </div>
                       <div className="text-[11px] text-[var(--slate)] mb-1">

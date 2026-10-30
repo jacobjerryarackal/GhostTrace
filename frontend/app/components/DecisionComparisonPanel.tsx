@@ -231,7 +231,7 @@ export const DecisionComparisonPanel: React.FC<DecisionComparisonProps> = ({
             </div>
 
             {/* Recovery Proof Footer */}
-            {isRecovered && (
+            {isRecovered && dependenceDetected && (
               <div style={{
                 marginTop: '1rem',
                 background: 'rgba(16, 185, 129, 0.08)',
@@ -246,7 +246,26 @@ export const DecisionComparisonPanel: React.FC<DecisionComparisonProps> = ({
               }}>
                 <ShieldCheck size={16} />
                 <span>
-                  <strong>RECOVERY PROVED:</strong> Counterfactual routing destination perfectly matches verified Corporate Treasury reference ({cleanReference?.approved_destination}).
+                  <strong>DECISION RECOVERY DEMONSTRATED:</strong> Counterfactual routing destination restored to Corporate Treasury reference ({cleanReference?.approved_destination}).
+                </span>
+              </div>
+            )}
+            {isRecovered && !dependenceDetected && (
+              <div style={{
+                marginTop: '1rem',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid var(--hairline, rgba(255, 255, 255, 0.1))',
+                borderRadius: '6px',
+                padding: '0.65rem 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.78rem',
+                color: 'var(--text-secondary, #94a3b8)',
+              }}>
+                <ShieldCheck size={16} />
+                <span>
+                  <strong>CLEAN BASELINE PRESERVED:</strong> Both baseline and counterfactual routing maintained verified Corporate Treasury ({cleanReference?.approved_destination}). Causal influence inconclusive.
                 </span>
               </div>
             )}

@@ -47,7 +47,7 @@ export function CaseRail({
     {
       num: 4,
       title: 'Interventional replay',
-      desc: 'Compare baseline vs counterfactual decision without suspect nodes.',
+      desc: 'Compare baseline vs counterfactual decision to evaluate causal influence.',
       isDone: hasReplayRun,
       actionLabel: hasReplayRun ? 'Re-run replay' : 'Run replay',
     },
@@ -61,9 +61,9 @@ export function CaseRail({
     {
       num: 6,
       title: 'Revoke and re-decide',
-      desc: 'Cascade deterministic invalidation and restore verified reference.',
+      desc: 'Cascade deterministic invalidation and re-evaluate decision under clean policy.',
       isDone: hasRevoked,
-      actionLabel: hasRevoked ? 'Revoked' : 'Revoke',
+      actionLabel: hasRevoked ? 'Revocation verified' : 'Revoke',
     },
   ];
 

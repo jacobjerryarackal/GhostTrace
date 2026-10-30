@@ -37,10 +37,19 @@ export function Inspector({
   }
 
   const { id, type, status, content, metadata } = selectedNode;
-  const isRevoked = status === 'revoked' || status === 'invalidated';
+  const isRevoked = status === 'revoked';
+  const isInvalidated = status === 'invalidated';
   const isQuarantined = status === 'quarantined';
+  const isClean = status === 'clean_reference' || status === 'trusted';
   const quarantineReasons = metadata?.quarantine_reasons || metadata?.trust_reasons || [];
   const riskScore = metadata?.risk_score ?? metadata?.extraction_risk;
+
+  const statusLabel =
+    isRevoked ? 'Revocation verified' :
+    isInvalidated ? 'Derived memory invalidated' :
+    isQuarantined ? 'Quarantined' :
+    status === 'clean_reference' ? 'Clean reference' :
+    status;
 
   return (
     <aside
@@ -59,15 +68,15 @@ export function Inspector({
           <span
             className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded border"
             style={{
-              borderColor: isQuarantined ? 'var(--uv)' : isRevoked ? 'var(--hairline)' : 'var(--ink)',
-              background: isQuarantined ? 'var(--uv-wash)' : 'var(--paper)',
-              color: isQuarantined ? 'var(--uv-deep)' : isRevoked ? 'var(--slate)' : 'var(--ink)',
+              borderColor: isQuarantined ? 'var(--uv)' : (isRevoked || isInvalidated) ? 'var(--hairline)' : 'var(--ink)',
+              background: isQuarantined ? 'var(--uv-wash)' : (isRevoked || isInvalidated) ? 'var(--chalk)' : 'var(--paper)',
+              color: isQuarantined ? 'var(--uv-deep)' : (isRevoked || isInvalidated) ? 'var(--slate)' : 'var(--ink)',
             }}
           >
             {isQuarantined && <Lock size={10} />}
-            {isRevoked && <span className="text-[10px]">✕</span>}
-            {!isQuarantined && !isRevoked && <Check size={10} />}
-            <span>{status}</span>
+            {(isRevoked || isInvalidated) && <span className="text-[10px]">✕</span>}
+            {!isQuarantined && !isRevoked && !isInvalidated && <Check size={10} />}
+            <span>{statusLabel}</span>
           </span>
         </div>
 
@@ -80,6 +89,46 @@ export function Inspector({
       </div>
 
       <div className="p-4 space-y-5 text-xs">
+        {/* Revocation Verified Alert */}
+        {isRevoked && (
+          <div
+            className="p-3 rounded border text-xs leading-relaxed"
+            style={{
+              background: 'var(--chalk)',
+              borderColor: 'var(--hairline)',
+              color: 'var(--ink)',
+            }}
+          >
+            <div className="flex items-center gap-1.5 font-semibold text-[var(--ink)] mb-1">
+              <Check size={13} />
+              <span>Revocation verified</span>
+            </div>
+            <p className="text-[11px] text-[var(--slate)]">
+              This evidence node has been permanently revoked. It is excluded from all downstream decision generation.
+            </p>
+          </div>
+        )}
+
+        {/* Derived Memory Invalidated Alert */}
+        {isInvalidated && (
+          <div
+            className="p-3 rounded border text-xs leading-relaxed"
+            style={{
+              background: 'var(--chalk)',
+              borderColor: 'var(--hairline)',
+              color: 'var(--ink)',
+            }}
+          >
+            <div className="flex items-center gap-1.5 font-semibold text-[var(--ink)] mb-1">
+              <span className="text-[11px] font-mono">✕</span>
+              <span>Derived memory invalidated</span>
+            </div>
+            <p className="text-[11px] text-[var(--slate)]">
+              Cascading DAG invalidation: this derived belief was automatically purged because its upstream source was revoked.
+            </p>
+          </div>
+        )}
+
         {/* Write-impact alert for suspect or quarantined nodes */}
         {isQuarantined && (
           <div

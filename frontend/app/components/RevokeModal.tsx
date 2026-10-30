@@ -38,7 +38,7 @@ export const RevokeModal: React.FC<RevokeModalProps> = ({
   isLoading,
   graph,
   cleanReference,
-  apiBaseUrl = 'http://localhost:8000',
+  apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000',
 }) => {
   const [reason, setReason] = useState<string>('Forensic evidence of untrusted redirection');
   const [serverPreview, setServerPreview] = useState<ServerPreviewData | null>(null);

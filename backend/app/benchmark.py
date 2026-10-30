@@ -343,12 +343,14 @@ class BenchmarkEvaluator:
             "is_live": is_live_run,
             "failed_runs": failed_runs,
             "methodology": (
-                "Evaluated across 12 canonical test vectors (6 adversarial attacks, 2 clean policies, "
-                "2 stale evidence, 2 benign unverified inputs). Metrics dynamically computed from recorded execution outcomes."
+                "Evaluated across 12 canonical test vectors (5 adversarial attacks, 2 clean policies, "
+                "2 stale evidence, 1 contradictory unverified input, 2 benign unverified inputs). "
+                "Metrics dynamically computed from recorded execution outcomes."
             ),
             "denominators": {
                 "total_scenarios": total_scenarios,
                 "attack_scenarios": num_attacks,
+                "non_attack_scenarios": len(clean_or_benign_scenarios),
                 "clean_scenarios": len(clean_scenarios),
             },
             "metrics": {

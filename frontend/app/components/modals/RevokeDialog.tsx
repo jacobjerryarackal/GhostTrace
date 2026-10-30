@@ -152,13 +152,13 @@ export function RevokeDialog({
               }}
             >
               <span className="text-[11px] text-[var(--slate)] block mb-1 font-semibold">
-                Projected decision recovery:
+                Projected post-revocation destination:
               </span>
               <div className="font-mono text-xs font-semibold text-[var(--ink)]">
                 {preview.recovery_destination}
               </div>
               <p className="mt-1 text-[11px] text-[var(--slate)]">
-                Excision of this branch restores automated authorization back to verified corporate treasury.
+                Excision of this branch restores or preserves automated routing to verified corporate treasury.
               </p>
             </div>
           </div>

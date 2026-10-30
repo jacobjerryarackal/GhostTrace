@@ -43,6 +43,16 @@ interface DetailItem {
 interface BenchmarkData {
   timestamp: string;
   scenarios_evaluated: number;
+  evaluation_mode?: string;
+  is_live?: boolean;
+  failed_runs?: number;
+  methodology?: string;
+  denominators?: {
+    total_scenarios: number;
+    attack_scenarios: number;
+    non_attack_scenarios: number;
+    clean_scenarios: number;
+  };
   metrics: {
     attack_success_rate: {
       simple_baseline: string;
@@ -75,6 +85,17 @@ interface BenchmarkData {
 const FALLBACK_BENCHMARK: BenchmarkData = {
   timestamp: new Date().toISOString(),
   scenarios_evaluated: 12,
+  evaluation_mode: 'deterministic_simulation',
+  is_live: false,
+  failed_runs: 0,
+  methodology:
+    'Evaluated across 12 canonical test vectors (5 adversarial attacks, 2 clean policies, 2 stale evidence, 1 contradictory unverified input, 2 benign unverified inputs). Metrics dynamically computed from recorded execution outcomes.',
+  denominators: {
+    total_scenarios: 12,
+    attack_scenarios: 5,
+    non_attack_scenarios: 7,
+    clean_scenarios: 2,
+  },
   metrics: {
     attack_success_rate: {
       simple_baseline: '100.0%',
@@ -504,9 +525,18 @@ export default function BenchmarkPage() {
     };
   }, []);
 
+  const [curlCommand, setCurlCommand] = useState('curl -s /api/benchmark | jq .metrics');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const base = process.env.NEXT_PUBLIC_API_URL || window.location.origin;
+      setCurlCommand(`curl -s "${base}/api/benchmark" | jq .metrics`);
+    }
+  }, []);
+
   const handleCopyCurl = async () => {
     try {
-      await navigator.clipboard.writeText('curl -s http://localhost:8000/api/benchmark | jq .metrics');
+      await navigator.clipboard.writeText(curlCommand);
       setCopiedCurl(true);
       setTimeout(() => setCopiedCurl(false), 2000);
     } catch {
@@ -529,10 +559,27 @@ export default function BenchmarkPage() {
         <div className="mx-auto max-w-[1200px] w-full px-4 sm:px-6 py-8 sm:py-10">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             <div className="max-w-[720px]">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 mb-3 text-xs font-mono rounded border border-[var(--hairline)] bg-[var(--chalk)] text-[var(--slate)]">
-                <span>Personal AI track</span>
-                <span>·</span>
-                <span>Empirical evaluation</span>
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 text-xs font-mono rounded border border-[var(--hairline)] bg-[var(--chalk)] text-[var(--slate)]">
+                  <span>Personal AI track</span>
+                  <span>·</span>
+                  <span>Empirical evaluation</span>
+                </div>
+                <div
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-mono rounded border"
+                  style={{
+                    borderColor: data.evaluation_mode === 'live_nemotron' ? 'var(--uv)' : 'var(--hairline)',
+                    background: data.evaluation_mode === 'live_nemotron' ? 'var(--uv-wash)' : 'var(--chalk)',
+                    color: data.evaluation_mode === 'live_nemotron' ? 'var(--uv-deep)' : 'var(--slate)',
+                  }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                  <span>
+                    {data.evaluation_mode === 'live_nemotron'
+                      ? 'Live Nemotron-3-Super'
+                      : 'Deterministic simulation'}
+                  </span>
+                </div>
               </div>
               <h1 className="text-3xl sm:text-4xl font-bold font-display tracking-tight text-[var(--ink)] leading-tight">
                 12-scenario benchmark: memory poisoning & cascading invalidation
@@ -541,11 +588,14 @@ export default function BenchmarkPage() {
                 We measure attack success, detection recall, and verified recovery across four memory
                 architectures under direct prompt injection, contradictory context, and derived belief laundering.
               </p>
+              <p className="mt-2 text-xs font-mono text-[var(--slate)]">
+                Denominators: 5 adversarial attacks (direct, derived, contradictory) + 7 non-attack vectors (2 clean policies, 2 stale collisions, 1 unverified contradictory, 2 benign untrusted).
+              </p>
             </div>
 
             {/* Reproduction curl card */}
             <div
-              className="lg:w-[380px] p-3.5 rounded border flex flex-col justify-between shrink-0"
+              className="lg:w-[400px] p-3.5 rounded border flex flex-col justify-between shrink-0"
               style={{
                 background: 'var(--chalk)',
                 borderColor: 'var(--hairline)',
@@ -559,11 +609,13 @@ export default function BenchmarkPage() {
                 <span className="text-[10px] font-mono text-[var(--slate)]">HTTP GET</span>
               </div>
               <div className="p-2 rounded bg-[var(--paper)] border border-[var(--hairline)] font-mono text-[11px] text-[var(--ink)] overflow-x-auto select-all">
-                <code>curl -s http://localhost:8000/api/benchmark | jq .metrics</code>
+                <code>{curlCommand}</code>
               </div>
               <div className="mt-2.5 flex items-center justify-between">
                 <span className="text-[10px] text-[var(--slate)]">
-                  {loading ? 'Evaluating live cluster…' : '12 of 12 scenarios evaluated'}
+                  {loading
+                    ? 'Evaluating live cluster…'
+                    : `${data.denominators?.total_scenarios || 12} scenarios (${data.denominators?.attack_scenarios || 5} attacks, ${data.denominators?.non_attack_scenarios || 7} controls)`}
                 </span>
                 <button
                   type="button"
@@ -637,7 +689,7 @@ export default function BenchmarkPage() {
               <div className="mt-6 pt-3 border-t border-[var(--hairline)]">
                 <div className="flex items-baseline justify-between font-mono">
                   <span className="text-2xl font-bold text-[var(--alert)]">100.0%</span>
-                  <span className="text-[10px] text-[var(--slate)]">10/10 attacks succeed</span>
+                  <span className="text-[10px] text-[var(--slate)]">5/5 attacks succeed</span>
                 </div>
                 <div className="mt-2 w-full h-2 rounded bg-gray-200 overflow-hidden">
                   <div className="h-full bg-[var(--alert)]" style={{ width: '100%' }} />
@@ -664,7 +716,7 @@ export default function BenchmarkPage() {
               <div className="mt-6 pt-3 border-t border-[var(--hairline)]">
                 <div className="flex items-baseline justify-between font-mono">
                   <span className="text-2xl font-bold text-[var(--ink)]">60.0%</span>
-                  <span className="text-[10px] text-[var(--slate)]">6/10 attacks succeed</span>
+                  <span className="text-[10px] text-[var(--slate)]">3/5 attacks succeed</span>
                 </div>
                 <div className="mt-2 w-full h-2 rounded bg-gray-200 overflow-hidden">
                   <div className="h-full bg-[var(--slate)]" style={{ width: '60%' }} />
@@ -690,11 +742,11 @@ export default function BenchmarkPage() {
               </div>
               <div className="mt-6 pt-3 border-t border-[var(--hairline)]">
                 <div className="flex items-baseline justify-between font-mono">
-                  <span className="text-2xl font-bold text-[var(--ink)]">33.3%</span>
-                  <span className="text-[10px] text-[var(--slate)]">3/10 attacks succeed</span>
+                  <span className="text-2xl font-bold text-[var(--ink)]">40.0%</span>
+                  <span className="text-[10px] text-[var(--slate)]">2/5 attacks succeed</span>
                 </div>
                 <div className="mt-2 w-full h-2 rounded bg-gray-200 overflow-hidden">
-                  <div className="h-full bg-[var(--slate)]" style={{ width: '33.3%' }} />
+                  <div className="h-full bg-[var(--slate)]" style={{ width: '40%' }} />
                 </div>
               </div>
             </div>
@@ -727,7 +779,7 @@ export default function BenchmarkPage() {
                 <div className="flex items-baseline justify-between font-mono">
                   <span className="text-2xl font-bold text-[var(--ink)]">0.0%</span>
                   <span className="text-[10px] font-semibold text-[var(--ink)] flex items-center gap-0.5">
-                    <Check size={11} /> 0/10 attacks succeed
+                    <Check size={11} /> 0/5 attacks succeed
                   </span>
                 </div>
                 <div className="mt-2 w-full h-2 rounded bg-[var(--chalk)] overflow-hidden border border-[var(--hairline)]">
@@ -767,11 +819,11 @@ export default function BenchmarkPage() {
                   Attack success rate
                 </div>
                 <p className="mt-1.5 text-[11px] text-[var(--slate)] leading-normal">
-                  Zero unauthorized fund diversions across all 10 adversarial attacks.
+                  Zero unauthorized fund diversions across all 5 adversarial test attacks.
                 </p>
               </div>
               <div className="mt-4 pt-2 border-t border-[var(--hairline)] text-[10px] font-mono text-[var(--slate)]">
-                vs 100.0% naive (Δ -100%)
+                vs 100.0% naive (5/5 succeed, Δ -100%)
               </div>
             </div>
 
@@ -792,11 +844,11 @@ export default function BenchmarkPage() {
                   Detection recall
                 </div>
                 <p className="mt-1.5 text-[11px] text-[var(--slate)] leading-normal">
-                  Intercepted every direct injection, contradictory rule, and laundered belief.
+                  Intercepted all 5 adversarial injections (direct, contradictory, derived).
                 </p>
               </div>
               <div className="mt-4 pt-2 border-t border-[var(--hairline)] text-[10px] font-mono text-[var(--slate)]">
-                vs 0.0% naive baseline
+                5/5 attacks quarantined (vs 0/5 naive)
               </div>
             </div>
 
@@ -821,7 +873,7 @@ export default function BenchmarkPage() {
                 </p>
               </div>
               <div className="mt-4 pt-2 border-t border-[var(--hairline)] text-[10px] font-mono text-[var(--slate)]">
-                Zero false positives
+                0 false alarms across 7 non-attack vectors
               </div>
             </div>
 
@@ -846,7 +898,7 @@ export default function BenchmarkPage() {
                 </p>
               </div>
               <div className="mt-4 pt-2 border-t border-[var(--hairline)] text-[10px] font-mono text-[var(--slate)]">
-                Unimpaired enterprise ops
+                0/2 clean corporate policies quarantined
               </div>
             </div>
 
@@ -871,7 +923,7 @@ export default function BenchmarkPage() {
                 </p>
               </div>
               <div className="mt-4 pt-2 border-t border-[var(--hairline)] text-[10px] font-mono text-[var(--slate)]">
-                vs 41.7% naive baseline
+                12/12 scenarios (vs 5/12 = 41.7% naive)
               </div>
             </div>
           </div>
@@ -1070,7 +1122,11 @@ export default function BenchmarkPage() {
                                 <div className="text-[11px] font-semibold text-[var(--ink)] pb-1.5 mb-2 border-b border-[var(--hairline)] flex items-center justify-between">
                                   <span>GhostTrace provenance evaluation</span>
                                   <span className="font-mono text-[10px] text-[var(--ink)] font-bold">
-                                    {gt?.recovered ? 'Recovery verified' : 'Clean'}
+                                    {sc.is_attack
+                                      ? gt?.quarantined
+                                        ? 'Attack quarantined · Reference protected'
+                                        : 'Recovery verified'
+                                      : 'Clean baseline preserved'}
                                   </span>
                                 </div>
                                 <div className="space-y-1.5">
