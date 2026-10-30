@@ -79,6 +79,10 @@ class ExtractedMemoryResult(BaseModel):
     is_live: bool = Field(default=False)
     model_id: Optional[str] = None
     latency_ms: float = Field(default=0.0)
+    error: Optional[str] = None
+    is_truncated: bool = Field(default=False)
+    finish_reason: Optional[str] = None
+    extraction_success: bool = Field(default=True)
 
 
 class DecisionResult(BaseModel):
@@ -100,21 +104,35 @@ class DecisionResult(BaseModel):
 
 def extract_json_block(text: str) -> str:
     """Extract JSON object from string, stripping markdown code fences or conversational prefix/suffix."""
+    if not text:
+        return ""
     text = text.strip()
-    if "```json" in text:
-        parts = text.split("```json")
-        if len(parts) > 1:
-            return parts[1].split("```")[0].strip()
-    elif "```" in text:
-        parts = text.split("```")
-        if len(parts) > 1:
-            return parts[1].split("```")[0].strip()
 
-    # If text starts with '{' and ends with '}', take substring
+    # 1. Match closed markdown code fence ```(?:json)? ... ``` (case-insensitive)
+    fence_pattern = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL | re.IGNORECASE)
+    match = fence_pattern.search(text)
+    if match:
+        return match.group(1).strip()
+
+    # 2. Match unclosed code fence ```(?:json)?\s*({.*) (e.g. if truncated)
+    unclosed_fence = re.compile(r"```(?:json)?\s*(\{.*)", re.DOTALL | re.IGNORECASE)
+    match_unclosed = unclosed_fence.search(text)
+    if match_unclosed:
+        cand = match_unclosed.group(1).strip()
+        cand = re.sub(r"```.*$", "", cand, flags=re.DOTALL).strip()
+        end = cand.rfind("}")
+        if end != -1:
+            return cand[: end + 1].strip()
+        return cand
+
+    # 3. Find outermost '{' and '}'
     start = text.find("{")
     end = text.rfind("}")
     if start != -1 and end != -1 and end > start:
         return text[start : end + 1].strip()
+
+    if start != -1:
+        return text[start:].strip()
 
     return text
 
@@ -323,38 +341,94 @@ class NebiusClient:
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=0.1,
-                max_tokens=600,
+                max_tokens=1500,
             )
             elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
-            raw_text = (response.choices[0].message.content or "").strip()
+            choice = response.choices[0]
+            finish_reason = choice.finish_reason
+            is_truncated = (finish_reason == "length")
+            raw_text = (choice.message.content or "").strip()
             clean_text = extract_json_block(raw_text)
 
-            data = json.loads(clean_text)
+            data = None
+            parse_error = None
+            if is_truncated:
+                parse_error = "Model response truncated due to token limit (finish_reason=length)"
+            else:
+                try:
+                    data = json.loads(clean_text)
+                    if not isinstance(data, dict):
+                        parse_error = "Model output is not a JSON object"
+                except json.JSONDecodeError as e:
+                    parse_error = f"Invalid JSON in model response: {str(e)}"
+
+            if not parse_error and data is not None:
+                required_keys = ["proposed_memory", "extracted_facts", "suspicious_markers", "risk_score"]
+                missing = [k for k in required_keys if k not in data]
+                if missing:
+                    parse_error = f"Missing required fields: {', '.join(missing)}"
+                else:
+                    proposed_mem = str(data.get("proposed_memory") or "").strip()
+                    extracted_facts = [str(f) for f in data.get("extracted_facts") or [] if str(f).strip()]
+                    suspicious_markers = [str(m) for m in data.get("suspicious_markers") or [] if str(m).strip()]
+                    try:
+                        risk_score = max(0.0, min(1.0, float(data.get("risk_score", 0.0))))
+                    except (ValueError, TypeError):
+                        risk_score = 0.0
+                    try:
+                        confidence = max(0.0, min(1.0, float(data.get("confidence", 0.9))))
+                    except (ValueError, TypeError):
+                        confidence = 0.9
+
+                    if not proposed_mem:
+                        # Empty proposed memory: rejected or declined by model
+                        return ExtractedMemoryResult(
+                            proposed_memory="",
+                            extracted_facts=extracted_facts,
+                            suspicious_markers=suspicious_markers,
+                            risk_score=risk_score,
+                            confidence=confidence,
+                            raw_response=raw_text,
+                            is_live=True,
+                            model_id=self.model_id,
+                            latency_ms=elapsed_ms,
+                            extraction_success=False,
+                            error="Empty proposed_memory in model response",
+                            finish_reason=finish_reason,
+                            is_truncated=is_truncated,
+                        )
+
+                    return ExtractedMemoryResult(
+                        proposed_memory=proposed_mem,
+                        extracted_facts=extracted_facts,
+                        suspicious_markers=suspicious_markers,
+                        risk_score=risk_score,
+                        confidence=confidence,
+                        raw_response=raw_text,
+                        is_live=True,
+                        model_id=self.model_id,
+                        latency_ms=elapsed_ms,
+                        extraction_success=True,
+                        error=None,
+                        finish_reason=finish_reason,
+                        is_truncated=is_truncated,
+                    )
+
+            logger.warning("Nemotron extraction parse failed: %s (truncated=%s)", parse_error, is_truncated)
             return ExtractedMemoryResult(
-                proposed_memory=str(data.get("proposed_memory", content[:200])),
-                extracted_facts=list(data.get("extracted_facts", [])),
-                suspicious_markers=list(data.get("suspicious_markers", [])),
-                risk_score=float(data.get("risk_score", 0.0)),
-                confidence=float(data.get("confidence", 0.9)),
+                proposed_memory="",
+                extracted_facts=[],
+                suspicious_markers=["extraction_parse_error"],
+                risk_score=0.0,
+                confidence=0.0,
                 raw_response=raw_text,
                 is_live=True,
                 model_id=self.model_id,
                 latency_ms=elapsed_ms,
-            )
-        except (json.JSONDecodeError, KeyError) as e:
-            logger.warning("Failed to parse JSON from Nemotron extraction: %s", e)
-            elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
-            # Preserves model output text with format marker
-            return ExtractedMemoryResult(
-                proposed_memory=raw_text[:250] if "raw_text" in locals() else content[:200],
-                extracted_facts=[content[:100]],
-                suspicious_markers=["unstructured_model_response"],
-                risk_score=0.5,
-                confidence=0.5,
-                raw_response=raw_text if "raw_text" in locals() else None,
-                is_live=True,
-                model_id=self.model_id,
-                latency_ms=elapsed_ms,
+                extraction_success=False,
+                error=parse_error or "Unknown extraction parse error",
+                finish_reason=finish_reason,
+                is_truncated=is_truncated,
             )
         except AuthenticationError as e:
             raise NebiusAuthError(f"Authentication failed during memory extraction: {str(e)}") from e

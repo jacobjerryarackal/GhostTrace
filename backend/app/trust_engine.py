@@ -172,6 +172,7 @@ class TrustEngine:
                 risk_score=0.8 if is_untrusted else 0.05,
                 confidence=0.5,
                 raw_response=str(e),
+                extraction_success=True,
             )
 
         # 2. Deterministic Trust Evaluation (Application logic, not relying on LLM alone)
@@ -179,9 +180,12 @@ class TrustEngine:
             source=source,
             content=content,
             override=trust_level_override,
-            extraction_risk=extraction.risk_score,
-            extraction_markers=extraction.suspicious_markers,
+            extraction_risk=extraction.risk_score if extraction else 0.0,
+            extraction_markers=extraction.suspicious_markers if extraction else [],
         )
+
+        if extraction and not extraction.extraction_success and extraction.error:
+            reasons.append(f"Model extraction note: {extraction.error}")
 
         evidence = Evidence(
             id=ev_id,
@@ -191,16 +195,22 @@ class TrustEngine:
             created_at=now,
             metadata={
                 "quarantine_reasons": reasons,
-                "extraction_risk": extraction.risk_score,
-                "suspicious_markers": extraction.suspicious_markers,
+                "extraction_risk": extraction.risk_score if extraction else 0.0,
+                "suspicious_markers": extraction.suspicious_markers if extraction else [],
                 "inference_mode": inference_mode,
+                "extraction_success": extraction.extraction_success if extraction else False,
+                "extraction_error": extraction.error if extraction else None,
             },
         )
         save_evidence(evidence)
 
-        # 3. Determine Memory Status based on evidence trust
+        # 3. Determine Memory Status based on evidence trust & extraction validity
         # Deterministic rule: memory derived from quarantined evidence MUST be quarantined
         mem_status = MemoryStatus.QUARANTINED if trust_level == TrustLevel.QUARANTINED else MemoryStatus.TRUSTED
+
+        # If extraction failed, memory MUST be quarantined
+        if extraction and not extraction.extraction_success:
+            mem_status = MemoryStatus.QUARANTINED
 
         # Also check parent memories
         parent_mem_ids = parent_memory_ids or []
@@ -210,20 +220,29 @@ class TrustEngine:
                 mem_status = MemoryStatus.QUARANTINED
                 reasons.append(f"Parent memory {p_id} is {parent_mem.status.value}")
 
+        # Validate memory content: reject empty or malformed memory content
+        if extraction and extraction.extraction_success and extraction.proposed_memory.strip():
+            mem_content = extraction.proposed_memory.strip()
+        else:
+            mem_content = f"[EXTRACTION REJECTED: {extraction.error if extraction else 'No valid memory candidate extracted'}]"
+
         memory = Memory(
             id=mem_id,
-            content=extraction.proposed_memory,
+            content=mem_content,
             status=mem_status,
             source_evidence_ids=[ev_id],
             parent_memory_ids=parent_mem_ids,
             created_at=now,
             updated_at=now,
             metadata={
-                "extracted_facts": extraction.extracted_facts,
-                "suspicious_markers": extraction.suspicious_markers,
-                "risk_score": extraction.risk_score,
+                "extracted_facts": extraction.extracted_facts if extraction else [],
+                "suspicious_markers": extraction.suspicious_markers if extraction else [],
+                "risk_score": extraction.risk_score if extraction else 0.0,
                 "trust_reasons": reasons,
                 "inference_mode": inference_mode,
+                "extraction_success": extraction.extraction_success if extraction else False,
+                "extraction_error": extraction.error if extraction else None,
+                "raw_response": extraction.raw_response if extraction else None,
             },
         )
         save_memory(memory)
