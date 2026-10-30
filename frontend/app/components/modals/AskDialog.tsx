@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState } from 'react';
 import { HelpCircle, X, Shield, AlertOctagon } from 'lucide-react';
 

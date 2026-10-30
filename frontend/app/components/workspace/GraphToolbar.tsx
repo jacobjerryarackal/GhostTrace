@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { Plus, HelpCircle, RotateCcw, Download, Play } from 'lucide-react';
 

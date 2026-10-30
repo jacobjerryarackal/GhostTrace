@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
 import { FileText, Brain, Scale, Lock, Check, ShieldAlert, X } from 'lucide-react';

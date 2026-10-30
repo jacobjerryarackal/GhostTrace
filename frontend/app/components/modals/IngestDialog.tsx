@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState } from 'react';
 import { Plus, X, AlertTriangle, Check } from 'lucide-react';
 import { ingestEvidence } from '@/lib/api';

@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { ArrowRight, Check, Play, Eye, RotateCcw } from 'lucide-react';
 

@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState } from 'react';
 import { ReplayData, AuditEventData } from '@/lib/types';
 import { ChevronUp, ChevronDown, Check, AlertOctagon, Clock, Info, ShieldCheck, Play } from 'lucide-react';

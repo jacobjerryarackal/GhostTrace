@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useEffect, useState } from 'react';
 import { RevokePreviewData } from '@/lib/types';
 import { fetchRevokePreview } from '@/lib/api';
