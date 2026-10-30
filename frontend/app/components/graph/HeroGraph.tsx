@@ -50,9 +50,11 @@ export function HeroGraph() {
     >
       {/* Top Header bar inside Hero Graph card */}
       <div className="flex items-center justify-between pb-3 border-b border-[var(--hairline)] text-xs">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-[var(--ink)]">Live memory DAG simulation</span>
-          <span className="text-[10px] font-mono text-[var(--slate)]">7 nodes</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold text-[var(--ink)]">Conceptual governance lifecycle</span>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-[var(--hairline)] bg-[var(--chalk)] text-[var(--slate)]">
+            Illustrative scenario · 7 nodes
+          </span>
         </div>
 
         <button
@@ -65,7 +67,7 @@ export function HeroGraph() {
             color: 'var(--ink)',
             borderRadius: 'var(--radius-sm)',
           }}
-          title="Re-run UV stain spread & drain animation"
+          title="Re-run illustrative sequence"
         >
           <RotateCcw size={11} />
           <span>Replay sequence</span>
@@ -360,16 +362,16 @@ export function HeroGraph() {
       </div>
 
       {/* Bottom status line */}
-      <div className="pt-2 border-t border-[var(--hairline)] flex items-center justify-between text-[11px] text-[var(--slate)]">
+      <div className="pt-2 border-t border-[var(--hairline)] flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] text-[var(--slate)]">
         <div>
-          {animStage === 0 && 'Baseline: Verified corporate AP policy 4.1 routing to 4471-0092.'}
-          {animStage === 1 && 'Contamination arrives: Phished email introduces fake account 8830-1175.'}
-          {animStage === 2 && 'Stain spreads: Derived memory launders fake remittance into persistent agent belief.'}
-          {animStage === 3 && 'Failure: Without GhostTrace quarantine, payout redirects to 8830-1175!'}
-          {animStage === 4 && 'Recovery proven: Excision purges derived belief; payout safely restored to 4471-0092.'}
+          {animStage === 0 && 'Stage 1 — Baseline policy: Ground-truth AP rule routes payment to verified treasury 4471-0092.'}
+          {animStage === 1 && 'Stage 2 — Untrusted input: Unverified phish email injects unauthorized remittance 8830-1175.'}
+          {animStage === 2 && 'Stage 3 — Synthesis hazard: Naive architectures store unverified facts into persistent memory.'}
+          {animStage === 3 && 'Stage 4 — Action divergence: Unscreened agent executes payment to unauthorized destination.'}
+          {animStage === 4 && 'Stage 5 — Invalidation: GhostTrace excises suspect belief and preserves verified baseline.'}
         </div>
-        <div className="font-mono text-[10px] text-[var(--slate)]">
-          Stage {Math.min(animStage + 1, 4)} of 4
+        <div className="font-mono text-[10px] text-[var(--slate)] shrink-0">
+          Illustrative · Step {animStage + 1} of 5
         </div>
       </div>
     </div>
